@@ -7,12 +7,12 @@ class TopIcon extends StatelessWidget {
   final VoidCallback? onTap;
 
   const TopIcon({
-    Key? key,
+    super.key,
     required this.text,
     required this.icon,
     this.isSelected = false,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
