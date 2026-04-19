@@ -6,6 +6,11 @@ class AdjustmentService {
   Timer? _timer;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
+  AdjustmentService() {
+    // Modo de baja latencia para que el sonido sea instantáneo y no se desfase
+    _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
+  }
+
   /// Inicia la guía con el intervalo en milisegundos calculado
   void iniciarGuia(
     int intervaloMilisegundos, {
@@ -28,17 +33,12 @@ class AdjustmentService {
         }
 
         if (modoAuditivo) {
-          // Optimización de reproducción para frecuencias altas
-          _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
+          // Limpieza de Memoria: liberamos el buffer antes de cada play()
+          // permitiendo que el sonido se reinicie inmediatamente en cada pulso
           await _audioPlayer.stop();
-          await _audioPlayer.play(AssetSource('audio/gota.mp3'));
           
-          // Corte acústico forzado a los 150ms
-          Future.delayed(const Duration(milliseconds: 150), () async {
-            if (_timer != null) {
-              await _audioPlayer.stop();
-            }
-          });
+          // Se reproduce el asset con la ruta correcta
+          await _audioPlayer.play(AssetSource('audio/gota.mp3'));
         }
       },
     );
