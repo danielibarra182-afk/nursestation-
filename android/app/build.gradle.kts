@@ -7,8 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.med_app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = flutter.ndkVersion
+
+    configurations.all {
+        resolutionStrategy.force("com.android.support:support-v4:28.0.0")
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

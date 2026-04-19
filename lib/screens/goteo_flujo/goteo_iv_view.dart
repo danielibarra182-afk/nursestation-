@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../services/goteo_flujo/gote_iv_services.dart';
+import '../../services/goteo_flujo/adjustment_service.dart';
 
 class GoteoIVView extends StatefulWidget {
   const GoteoIVView({super.key});
@@ -7,7 +10,7 @@ class GoteoIVView extends StatefulWidget {
   State<GoteoIVView> createState() => _GoteoIVViewState();
 }
 
-class _GoteoIVViewState extends State<GoteoIVView> {
+class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStateMixin {
   // Controladores para los campos de texto
   final TextEditingController _volumenController = TextEditingController();
   final TextEditingController _tiempoController = TextEditingController();
@@ -16,14 +19,82 @@ class _GoteoIVViewState extends State<GoteoIVView> {
   bool _isHoras = true; // true = horas, false = minutos
   bool _isNormogotero = true; // true = normogotero, false = microgotero
 
+  double _resultadoGotas = 0;
+  double _resultadoMlHora = 0;
+
+  // Variables para la guía de ajuste
+  final AdjustmentService _adjustmentService = AdjustmentService();
+  bool _isGuideActive = false;
+  Timer? _visualTimer;
+
+  late AnimationController _animationController;
+  late Animation<Color?> _colorAnimation;
+
   // Mismo color primario utilizado en la calculadora maestra
   final Color _primaryBlue = const Color(0xFF0056D2);
 
   @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _colorAnimation = ColorTween(
+      begin: Colors.green.shade50,
+      end: Colors.green.shade300, // Color verde más intenso al ritmo del goteo
+    ).animate(_animationController);
+  }
+
+  @override
   void dispose() {
+    _detenerGuia();
+    _animationController.dispose();
     _volumenController.dispose();
     _tiempoController.dispose();
     super.dispose();
+  }
+
+  void _iniciarGuia() {
+    final int intervalo = GoteoIvService.calcularIntervaloMilisegundos(_resultadoGotas);
+    
+    _adjustmentService.iniciarGuia(
+      intervalo,
+      modoSensorial: true,
+      modoAuditivo: true,
+    );
+
+    setState(() {
+      _isGuideActive = true;
+    });
+
+    _visualTimer = Timer.periodic(Duration(milliseconds: intervalo), (timer) {
+      if (!mounted) return;
+      _animationController.forward().then((_) {
+        if (mounted) _animationController.reverse();
+      });
+    });
+  }
+
+  void _detenerGuia() {
+    _adjustmentService.detenerGuia();
+    _visualTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        _isGuideActive = false;
+      });
+      _animationController.reset();
+    }
+  }
+
+  void _nuevoCalculo() {
+    _detenerGuia();
+    _volumenController.clear();
+    _tiempoController.clear();
+    setState(() {
+      _resultadoGotas = 0;
+      _resultadoMlHora = 0;
+    });
   }
 
   // Widget de ayuda para mantener consistencia en las etiquetas
@@ -187,8 +258,29 @@ class _GoteoIVViewState extends State<GoteoIVView> {
           // --- SECCIÓN 4: BOTÓN CALCULAR ---
           ElevatedButton(
             onPressed: () {
-              // TODO: Implementar lógica de cálculo
               FocusScope.of(context).unfocus(); // Ocultar el teclado al calcular
+              _detenerGuia(); // Detener si estaba corriendo una guía previa
+              
+              final double volumen = double.tryParse(_volumenController.text) ?? 0;
+              final double tiempo = double.tryParse(_tiempoController.text) ?? 0;
+              
+              if (volumen > 0 && tiempo > 0) {
+                final int factorGoteo = _isNormogotero ? 20 : 60;
+                
+                setState(() {
+                  _resultadoGotas = GoteoIvService.calcularGotasMin(
+                    volumen: volumen,
+                    tiempo: tiempo,
+                    isHoras: _isHoras,
+                    factorGoteo: factorGoteo,
+                  );
+                  _resultadoMlHora = GoteoIvService.calcularMlHora(
+                    volumen: volumen,
+                    tiempo: tiempo,
+                    isHoras: _isHoras,
+                  );
+                });
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryBlue,
@@ -207,6 +299,86 @@ class _GoteoIVViewState extends State<GoteoIVView> {
               ),
             ),
           ),
+          
+          // --- SECCIÓN 5: RESULTADOS ---
+          if (_resultadoGotas > 0) ...[
+            const SizedBox(height: 32),
+            AnimatedBuilder(
+              animation: _colorAnimation,
+              builder: (context, child) {
+                return Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: _colorAnimation.value,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Gotas / min',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _resultadoGotas.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const Divider(height: 32, color: Colors.green),
+                      Text(
+                        'Flujo: ${_resultadoMlHora.toStringAsFixed(1)} ml/h',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Botón Iniciar/Detener dentro de la tarjeta de resultados
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _isGuideActive ? _detenerGuia() : _iniciarGuia(),
+                          icon: Icon(_isGuideActive ? Icons.stop : Icons.play_arrow),
+                          label: Text(_isGuideActive ? 'Detener Guía' : 'Iniciar Guía'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _isGuideActive ? Colors.red.shade600 : Colors.green.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 24),
+
+            // --- SECCIÓN 6: NUEVO CÁLCULO ---
+            OutlinedButton.icon(
+              onPressed: _nuevoCalculo,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Nuevo Cálculo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _primaryBlue,
+                side: BorderSide(color: _primaryBlue, width: 2),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
         ],
       ),
     );
