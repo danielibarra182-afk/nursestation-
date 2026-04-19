@@ -28,8 +28,17 @@ class AdjustmentService {
         }
 
         if (modoAuditivo) {
-          // Recuerda agregar un sonido corto en assets/audio/ y declararlo en pubspec.yaml
-          await _audioPlayer.play(AssetSource('audio/drop_sound.mp3'));
+          // Optimización de reproducción para frecuencias altas
+          _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
+          await _audioPlayer.stop();
+          await _audioPlayer.play(AssetSource('audio/gota.mp3'));
+          
+          // Corte acústico forzado a los 150ms
+          Future.delayed(const Duration(milliseconds: 150), () async {
+            if (_timer != null) {
+              await _audioPlayer.stop();
+            }
+          });
         }
       },
     );

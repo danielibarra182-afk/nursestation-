@@ -146,7 +146,7 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
           _buildLabel('Volumen a transfundir (ml)'),
           TextField(
             controller: _volumenController,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: _buildInputDecoration('Ej. 1000'),
           ),
           const SizedBox(height: 24),
@@ -160,7 +160,7 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
                 flex: 2,
                 child: TextField(
                   controller: _tiempoController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: _buildInputDecoration('Ej. 8'),
                 ),
               ),
@@ -261,8 +261,8 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
               FocusScope.of(context).unfocus(); // Ocultar el teclado al calcular
               _detenerGuia(); // Detener si estaba corriendo una guía previa
               
-              final double volumen = double.tryParse(_volumenController.text) ?? 0;
-              final double tiempo = double.tryParse(_tiempoController.text) ?? 0;
+              final double volumen = double.tryParse(_volumenController.text.replaceAll(',', '.')) ?? 0;
+              final double tiempo = double.tryParse(_tiempoController.text.replaceAll(',', '.')) ?? 0;
               
               if (volumen > 0 && tiempo > 0) {
                 final int factorGoteo = _isNormogotero ? 20 : 60;
@@ -280,6 +280,13 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
                     isHoras: _isHoras,
                   );
                 });
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Por favor, ingresa valores válidos mayores a 0.'),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
               }
             },
             style: ElevatedButton.styleFrom(
