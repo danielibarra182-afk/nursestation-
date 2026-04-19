@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/quick_acces_card.dart';
 import '../widgets/top_icon.dart';
+import 'goteo_flujo/calculadora_maestra_screen.dart';
 
 class InicioScreen extends StatefulWidget {
   const InicioScreen({super.key});
@@ -77,27 +78,28 @@ class _InicioScreenState extends State<InicioScreen> {
             ),
             const SizedBox(height: 20),
             // Lista de accesos rápidos
-            const Column(
+            Column(
               children: [
                 QuickAccessCard(
                   title: 'Goteo IV',
                   subtitle: 'Cálculo de macrogoteo y microgoteo',
                   icon: Icons.water_drop,
-                  iconColor: Color(0xFF1B5AE6),
+                  iconColor: const Color(0xFF1B5AE6),
+                  onTap: () => setState(() => _selectedIndex = 1),
                 ),
-                QuickAccessCard(
+                const QuickAccessCard(
                   title: 'Kardex Médico',
                   subtitle: 'Gestión de pacientes',
                   icon: Icons.folder_shared,
                   iconColor: Color(0xFF10B981),
                 ),
-                QuickAccessCard(
+                const QuickAccessCard(
                   title: 'Medicamentos',
                   subtitle: 'compendio de medicamentos',
                   icon: Icons.history,
                   iconColor: Color(0xFFF59E0B),
                 ),
-                QuickAccessCard(
+                const QuickAccessCard(
                   title: 'Ajustes',
                   subtitle: 'Configuración general',
                   icon: Icons.settings,
@@ -132,7 +134,7 @@ class _InicioScreenState extends State<InicioScreen> {
         content = _buildInicioContent();
         break;
       case 1:
-        content = _buildPlaceholder('Goteo/Flujo');
+        content = const CalculadoraMaestraScreen();
         break;
       case 2:
         content = _buildPlaceholder('Kardex');
