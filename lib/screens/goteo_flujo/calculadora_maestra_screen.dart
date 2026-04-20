@@ -59,7 +59,7 @@ class _CalculadoraMaestraScreenState extends State<CalculadoraMaestraScreen>
       case 1:
         return Icons.speed;
       case 2:
-        return Icons.vaccines; // Jeringa for Goteo Real
+        return Icons.colorize; // Jeringa/gotero for Goteo Real
       case 0:
       default:
         return Icons.water_drop;
@@ -95,13 +95,11 @@ class _CalculadoraMaestraScreenState extends State<CalculadoraMaestraScreen>
               color: _currentActiveColor,
               shape: BoxShape.circle,
             ),
-            child: _tabController.index == 2
-                ? Image.asset('assets/icons/icono goteo real.png', height: 40, color: Colors.white)
-                : Icon(
-                    _currentIcon,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+            child: Icon(
+              _currentIcon,
+              color: Colors.white,
+              size: _tabController.index == 2 ? 40 : 32,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -141,7 +139,7 @@ class _CalculadoraMaestraScreenState extends State<CalculadoraMaestraScreen>
                 tabs: [
                   _buildTab(0, 'Goteo IV', Icons.water_drop_outlined, Icons.water_drop),
                   _buildTab(1, 'Flujo', Icons.timer_outlined, Icons.timer),
-                  _buildTab(2, 'Goteo Real', Icons.vaccines_outlined, Icons.vaccines),
+                  _buildTab(2, 'Goteo Real', Icons.colorize, Icons.colorize),
                 ],
               ),
             ),
@@ -178,9 +176,7 @@ class _CalculadoraMaestraScreenState extends State<CalculadoraMaestraScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            index == 2
-                ? Image.asset('assets/icons/icono goteo real.png', height: 20, color: isSelected ? Colors.white : Colors.grey.shade700)
-                : Icon(isSelected ? selectedIcon : unselectedIcon, size: 16),
+            Icon(isSelected ? selectedIcon : unselectedIcon, size: index == 2 ? 20 : 16),
             const SizedBox(width: 4),
             Flexible(
               child: Text(

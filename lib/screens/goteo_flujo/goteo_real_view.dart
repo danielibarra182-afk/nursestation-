@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/goteo_flujo/goteo_real_services.dart';
 
 class GoteoRealView extends StatefulWidget {
   const GoteoRealView({super.key});
@@ -10,6 +11,9 @@ class GoteoRealView extends StatefulWidget {
 class _GoteoRealViewState extends State<GoteoRealView> {
   // Estado para el tipo de equipo (true = Macrogoteo, false = Microgoteo)
   bool _isMacrogoteo = true;
+  
+  // Servicio para el cálculo de goteo real
+  final GoteoRealService _goteoRealService = GoteoRealService();
 
   // Color de atención para esta pantalla
   final Color _primaryTeal =
@@ -42,7 +46,7 @@ class _GoteoRealViewState extends State<GoteoRealView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset('assets/icons/icono goteo real.png', height: 24, color: const Color(0xFF2E7D32)),
+                    const Icon(Icons.colorize, color: Color(0xFF2E7D32)),
                     const SizedBox(width: 12),
                     const Text(
                       'Medir Goteo Real',
@@ -104,7 +108,9 @@ class _GoteoRealViewState extends State<GoteoRealView> {
                 // Botón de Acción Grande
                 ElevatedButton(
                   onPressed: () {
-                    // Lógica futura para el conteo de goteo
+                    setState(() {
+                      _goteoRealService.registrarGota();
+                    });
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _primaryTeal,
@@ -115,13 +121,15 @@ class _GoteoRealViewState extends State<GoteoRealView> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Column(
+                  child: Column(
                     children: [
-                      Icon(Icons.water_drop, size: 32),
-                      SizedBox(height: 12),
+                      const Icon(Icons.water_drop, size: 32),
+                      const SizedBox(height: 12),
                       Text(
-                        'Presionar al ver gota',
-                        style: TextStyle(
+                        _goteoRealService.cantidadToques == 0
+                            ? 'Presionar al ver gota'
+                            : 'Presionar al ver gota (${_goteoRealService.cantidadToques})',
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -129,6 +137,19 @@ class _GoteoRealViewState extends State<GoteoRealView> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 24),
+                if (!_goteoRealService.tieneSuficientesDatos && _goteoRealService.cantidadToques > 0)
+                  Text(
+                    '${_goteoRealService.cantidadToques} toque${_goteoRealService.cantidadToques == 1 ? '' : 's'} (Mínimo 3 para calcular)',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                if (_goteoRealService.tieneSuficientesDatos)
+                  _buildResultPanel(),
               ],
             ),
           ),
@@ -236,6 +257,87 @@ class _GoteoRealViewState extends State<GoteoRealView> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildResultPanel() {
+    int factorEquipo = _isMacrogoteo ? 20 : 60;
+    int gotasMin = _goteoRealService.calcularGotasPorMinuto();
+    double mlHora = _goteoRealService.calcularMlPorHora(factorEquipo);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _primaryTeal.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _primaryTeal.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'Medición Actual',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF003366),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildResultItem(Icons.water_drop, '$gotasMin', 'gotas/min'),
+              Container(
+                height: 40,
+                width: 1,
+                color: Colors.grey.shade300,
+              ),
+              _buildResultItem(Icons.speed, mlHora.toStringAsFixed(1), 'mL/h'),
+            ],
+          ),
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            onPressed: () {
+              setState(() {
+                _goteoRealService.reiniciar();
+              });
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Reiniciar Medición'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _primaryTeal,
+              side: BorderSide(color: _primaryTeal),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultItem(IconData icon, String value, String unit) {
+    return Column(
+      children: [
+        Icon(icon, color: _primaryTeal, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: _primaryTeal,
+          ),
+        ),
+        Text(
+          unit,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
     );
   }
 }
