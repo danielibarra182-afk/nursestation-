@@ -10,11 +10,12 @@ class GoteoIVView extends StatefulWidget {
   State<GoteoIVView> createState() => _GoteoIVViewState();
 }
 
-class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStateMixin {
+class _GoteoIVViewState extends State<GoteoIVView>
+    with SingleTickerProviderStateMixin {
   // Controladores para los campos de texto
   final TextEditingController _volumenController = TextEditingController();
   final TextEditingController _tiempoController = TextEditingController();
-  
+
   // Variables de estado para las opciones
   bool _isHoras = true; // true = horas, false = minutos
   bool _isNormogotero = true; // true = normogotero, false = microgotero
@@ -56,8 +57,9 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
   }
 
   void _iniciarGuia() {
-    final int intervalo = GoteoIvService.calcularIntervaloMilisegundos(_resultadoGotas);
-    
+    final int intervalo =
+        GoteoIvService.calcularIntervaloMilisegundos(_resultadoGotas);
+
     _adjustmentService.iniciarGuia(
       intervalo,
       modoSensorial: true,
@@ -160,7 +162,8 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
                 flex: 2,
                 child: TextField(
                   controller: _tiempoController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: _buildInputDecoration('Ej. 8'),
                 ),
               ),
@@ -182,18 +185,29 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
                           child: Container(
                             margin: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: _isHoras ? Colors.white : Colors.transparent,
+                              color:
+                                  _isHoras ? Colors.white : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: _isHoras
-                                  ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))]
+                                  ? [
+                                      BoxShadow(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.05),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2))
+                                    ]
                                   : null,
                             ),
                             alignment: Alignment.center,
                             child: Text(
                               'Horas',
                               style: TextStyle(
-                                fontWeight: _isHoras ? FontWeight.bold : FontWeight.w500,
-                                color: _isHoras ? _primaryBlue : Colors.grey.shade600,
+                                fontWeight: _isHoras
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: _isHoras
+                                    ? _primaryBlue
+                                    : Colors.grey.shade600,
                               ),
                             ),
                           ),
@@ -205,18 +219,29 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
                           child: Container(
                             margin: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: !_isHoras ? Colors.white : Colors.transparent,
+                              color:
+                                  !_isHoras ? Colors.white : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: !_isHoras
-                                  ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))]
+                                  ? [
+                                      BoxShadow(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.05),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2))
+                                    ]
                                   : null,
                             ),
                             alignment: Alignment.center,
                             child: Text(
                               'Minutos',
                               style: TextStyle(
-                                fontWeight: !_isHoras ? FontWeight.bold : FontWeight.w500,
-                                color: !_isHoras ? _primaryBlue : Colors.grey.shade600,
+                                fontWeight: !_isHoras
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: !_isHoras
+                                    ? _primaryBlue
+                                    : Colors.grey.shade600,
                               ),
                             ),
                           ),
@@ -258,15 +283,20 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
           // --- SECCIÓN 4: BOTÓN CALCULAR ---
           ElevatedButton(
             onPressed: () {
-              FocusScope.of(context).unfocus(); // Ocultar el teclado al calcular
+              FocusScope.of(context)
+                  .unfocus(); // Ocultar el teclado al calcular
               _detenerGuia(); // Detener si estaba corriendo una guía previa
-              
-              final double volumen = double.tryParse(_volumenController.text.replaceAll(',', '.')) ?? 0;
-              final double tiempo = double.tryParse(_tiempoController.text.replaceAll(',', '.')) ?? 0;
-              
+
+              final double volumen = double.tryParse(
+                      _volumenController.text.replaceAll(',', '.')) ??
+                  0;
+              final double tiempo = double.tryParse(
+                      _tiempoController.text.replaceAll(',', '.')) ??
+                  0;
+
               if (volumen > 0 && tiempo > 0) {
                 final int factorGoteo = _isNormogotero ? 20 : 60;
-                
+
                 setState(() {
                   _resultadoGotas = GoteoIvService.calcularGotasMin(
                     volumen: volumen,
@@ -283,7 +313,8 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Por favor, ingresa valores válidos mayores a 0.'),
+                    content:
+                        Text('Por favor, ingresa valores válidos mayores a 0.'),
                     backgroundColor: Colors.redAccent,
                   ),
                 );
@@ -306,7 +337,7 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
               ),
             ),
           ),
-          
+
           // --- SECCIÓN 5: RESULTADOS ---
           if (_resultadoGotas > 0) ...[
             const SizedBox(height: 32),
@@ -318,7 +349,7 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
                   decoration: BoxDecoration(
                     color: _colorAnimation.value,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.green.shade200),
+                    border: Border.all(color: Colors.green.shade200, width: 2),
                   ),
                   child: Column(
                     children: [
@@ -327,41 +358,96 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                          color: Color(0xFF2E7D32),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        _resultadoGotas.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.green,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.water_drop_outlined,
+                              color: Color(0xFF2E7D32), size: 40),
+                          const SizedBox(width: 8),
+                          Text(
+                            _resultadoGotas.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontSize: 56,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF2E7D32),
+                            ),
+                          ),
+                        ],
                       ),
-                      const Divider(height: 32, color: Colors.green),
+                      const SizedBox(height: 12),
                       Text(
                         'Flujo: ${_resultadoMlHora.toStringAsFixed(1)} ml/h',
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Colors.green,
+                          color: Color(0xFF2E7D32),
                         ),
                       ),
                       const SizedBox(height: 24),
-                      // Botón Iniciar/Detener dentro de la tarjeta de resultados
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _isGuideActive ? _detenerGuia() : _iniciarGuia(),
-                          icon: Icon(_isGuideActive ? Icons.stop : Icons.play_arrow),
-                          label: Text(_isGuideActive ? 'Detener Guía' : 'Iniciar Guía'),
+                        child: ElevatedButton(
+                          onPressed: () =>
+                              _isGuideActive ? _detenerGuia() : _iniciarGuia(),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _isGuideActive ? Colors.red.shade600 : Colors.green.shade600,
+                            backgroundColor: _isGuideActive
+                                ? Colors.red.shade600
+                                : const Color(
+                                    0xFF8B5CF6), // Púrpura de la imagen
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                  _isGuideActive
+                                      ? Icons.stop
+                                      : Icons.play_arrow,
+                                  size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                _isGuideActive
+                                    ? 'Detener Guía de Ajuste'
+                                    : 'Iniciar Guía de Ajuste',
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.water_drop,
+                                  size: 16, color: Colors.lightBlueAccent),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.volume_up,
+                                  size: 16, color: Colors.grey),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: _nuevoCalculo,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF2E7D32),
+                            side: const BorderSide(
+                                color: Color(0xFF2E7D32), width: 1),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            backgroundColor: Colors.white,
+                          ),
+                          child: const Text(
+                            'Nuevo Cálculo',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -370,22 +456,7 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
                 );
               },
             ),
-
-            const SizedBox(height: 24),
-
-            // --- SECCIÓN 6: NUEVO CÁLCULO ---
-            OutlinedButton.icon(
-              onPressed: _nuevoCalculo,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Nuevo Cálculo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _primaryBlue,
-                side: BorderSide(color: _primaryBlue, width: 2),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ],
+          ]
         ],
       ),
     );
@@ -404,7 +475,8 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? _primaryBlue.withOpacity(0.05) : Colors.white,
+          color:
+              isSelected ? _primaryBlue.withValues(alpha: 0.05) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? _primaryBlue : Colors.grey.shade300,
@@ -431,7 +503,9 @@ class _GoteoIVViewState extends State<GoteoIVView> with SingleTickerProviderStat
               subtitle,
               style: TextStyle(
                 fontSize: 12,
-                color: isSelected ? _primaryBlue.withOpacity(0.8) : Colors.grey.shade500,
+                color: isSelected
+                    ? _primaryBlue.withValues(alpha: 0.8)
+                    : Colors.grey.shade500,
               ),
             ),
           ],

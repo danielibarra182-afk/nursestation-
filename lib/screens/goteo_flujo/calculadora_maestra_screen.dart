@@ -42,15 +42,38 @@ class _CalculadoraMaestraScreenState extends State<CalculadoraMaestraScreen>
     }
   }
 
+  String get _currentSubtitle {
+    switch (_tabController.index) {
+      case 1:
+        return 'Cálculo de flujo infundido en bombas';
+      case 2:
+        return 'Mide el goteo real del equipo';
+      case 0:
+      default:
+        return 'Cálculo rápido y preciso para personal de salud';
+    }
+  }
+
   IconData get _currentIcon {
     switch (_tabController.index) {
       case 1:
         return Icons.speed;
       case 2:
-        return Icons.timer;
+        return Icons.vaccines; // Jeringa for Goteo Real
       case 0:
       default:
         return Icons.water_drop;
+    }
+  }
+
+  Color get _currentActiveColor {
+    switch (_tabController.index) {
+      case 2:
+        return const Color(0xFF009688); // Teal (Turquesa oscuro)
+      case 0:
+      case 1:
+      default:
+        return const Color(0xFF0056D2); // Primary Blue
     }
   }
 
@@ -68,15 +91,17 @@ class _CalculadoraMaestraScreenState extends State<CalculadoraMaestraScreen>
           // --- Sección del Header (Icono circular y textos) ---
           Container(
             padding: const EdgeInsets.all(18),
-            decoration: const BoxDecoration(
-              color: primaryBlue,
+            decoration: BoxDecoration(
+              color: _currentActiveColor,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              _currentIcon,
-              color: Colors.white,
-              size: 32,
-            ),
+            child: _tabController.index == 2
+                ? Image.asset('assets/icons/icono goteo real.png', height: 40, color: Colors.white)
+                : Icon(
+                    _currentIcon,
+                    color: Colors.white,
+                    size: 32,
+                  ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -89,7 +114,7 @@ class _CalculadoraMaestraScreenState extends State<CalculadoraMaestraScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Cálculo rápido y preciso para personal de salud',
+            _currentSubtitle,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade600,
@@ -97,62 +122,26 @@ class _CalculadoraMaestraScreenState extends State<CalculadoraMaestraScreen>
           ),
           const SizedBox(height: 32),
 
-          // --- TabBar central tipo "Segmented Control" ---
+          // --- TabBar central tipo "Botones separados" ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Container(
               height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
               child: TabBar(
                 controller: _tabController,
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent, // Quita la linea base
                 indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: primaryBlue,
+                  borderRadius: BorderRadius.circular(8),
+                  color: _currentActiveColor,
                 ),
                 labelColor: Colors.white,
                 unselectedLabelColor: Colors.grey.shade700,
-                // Ajustamos padding para evitar overflow en pantallas pequeñas
-                labelPadding: EdgeInsets.zero,
-                tabs: const [
-                  Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.water_drop, size: 16),
-                        SizedBox(width: 4),
-                        Text('Goteo IV', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                      ],
-                    ),
-                  ),
-                  Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.speed, size: 16),
-                        SizedBox(width: 4),
-                        Text('Flujo', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                      ],
-                    ),
-                  ),
-                  Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.timer, size: 16),
-                        SizedBox(width: 4),
-                        Text('Goteo Real', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                      ],
-                    ),
-                  ),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                tabs: [
+                  _buildTab(0, 'Goteo IV', Icons.water_drop_outlined, Icons.water_drop),
+                  _buildTab(1, 'Flujo', Icons.timer_outlined, Icons.timer),
+                  _buildTab(2, 'Goteo Real', Icons.vaccines_outlined, Icons.vaccines),
                 ],
               ),
             ),
@@ -171,6 +160,37 @@ class _CalculadoraMaestraScreenState extends State<CalculadoraMaestraScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTab(int index, String text, IconData unselectedIcon, IconData selectedIcon) {
+    bool isSelected = _tabController.index == index;
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.transparent : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isSelected ? Colors.transparent : Colors.grey.shade300,
+        ),
+      ),
+      child: Tab(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            index == 2
+                ? Image.asset('assets/icons/icono goteo real.png', height: 20, color: isSelected ? Colors.white : Colors.grey.shade700)
+                : Icon(isSelected ? selectedIcon : unselectedIcon, size: 16),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                text,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

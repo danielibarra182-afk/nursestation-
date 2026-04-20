@@ -24,6 +24,15 @@ class GoteoIvService {
     return volumen / tiempoEnHoras;
   }
 
+  /// Calcula las gotas por minuto partiendo de una velocidad de flujo (mL/hora)
+  static double calcularGotasDesdeFlujo({
+    required double mlHora,
+    required int factorGoteo,
+  }) {
+    if (mlHora <= 0) return 0;
+    return (mlHora * factorGoteo) / 60.0;
+  }
+
   /// Convierte las gotas por minuto en el intervalo en milisegundos entre cada gota
   static int calcularIntervaloMilisegundos(double gotasMin) {
     if (gotasMin <= 0) return 0; // Prevenir división por cero o negativa
