@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/quick_acces_card.dart';
 import '../widgets/top_icon.dart';
 import 'goteo_flujo/calculadora_maestra_screen.dart';
+import 'kardex/agregar_paciente_screen.dart';
+import 'kardex/kardex_principal_screen.dart';
 
 class InicioScreen extends StatefulWidget {
   const InicioScreen({super.key});
@@ -87,11 +89,12 @@ class _InicioScreenState extends State<InicioScreen> {
                   iconColor: const Color(0xFF1B5AE6),
                   onTap: () => setState(() => _selectedIndex = 1),
                 ),
-                const QuickAccessCard(
-                  title: 'Kardex Médico',
+                QuickAccessCard(
+                  title: 'Kardex de Pacientes',
                   subtitle: 'Gestión de pacientes',
-                  icon: Icons.folder_shared,
-                  iconColor: Color(0xFF10B981),
+                  icon: Icons.assignment_ind,
+                  iconColor: const Color(0xFF40E0D0),
+                  onTap: () => setState(() => _selectedIndex = 2),
                 ),
                 const QuickAccessCard(
                   title: 'Medicamentos',
@@ -137,7 +140,7 @@ class _InicioScreenState extends State<InicioScreen> {
         content = const CalculadoraMaestraScreen();
         break;
       case 2:
-        content = _buildPlaceholder('Kardex');
+        content = const KardexPrincipalScreen();
         break;
       case 3:
         content = _buildPlaceholder('Medicamentos');
