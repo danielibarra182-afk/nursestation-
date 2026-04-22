@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../../models/patient_model.dart';
+import '../../../models/patient_model.dart';
 
 class AgregarPacienteScreen extends StatefulWidget {
   const AgregarPacienteScreen({super.key});

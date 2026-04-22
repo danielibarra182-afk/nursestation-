@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/quick_acces_card.dart';
 import '../widgets/top_icon.dart';
 import 'goteo_flujo/calculadora_maestra_screen.dart';
-import 'kardex/agregar_paciente_screen.dart';
-import 'kardex/kardex_principal_screen.dart';
+import '../features/kardex/screen/agregar_paciente_screen.dart';
+import '../features/kardex/screen/kardex_principal_screen.dart';
 
 class InicioScreen extends StatefulWidget {
   const InicioScreen({super.key});
