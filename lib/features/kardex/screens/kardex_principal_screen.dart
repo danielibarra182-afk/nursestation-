@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'agregar_paciente_screen.dart';
+import 'detalle_px_layout.dart';
 import '../../../models/patient_model.dart';
 
 class KardexPrincipalScreen extends StatefulWidget {
@@ -296,7 +297,12 @@ class _KardexPrincipalScreenState extends State<KardexPrincipalScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: () {
-              // Acción al tocar la tarjeta (Por ahora ninguna, según lo pedido)
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetallePxLayout(paciente: patient),
+                ),
+              );
             },
             child: Padding(
               padding: const EdgeInsets.all(16.0),

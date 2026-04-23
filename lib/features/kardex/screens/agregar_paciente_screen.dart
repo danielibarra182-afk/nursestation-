@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../models/patient_model.dart';
+import '../widgets/custom_kardex_input.dart';
+import '../widgets/kardex_style.dart';
 
 class AgregarPacienteScreen extends StatefulWidget {
   const AgregarPacienteScreen({super.key});
@@ -35,7 +37,7 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF10B981), // Cabecera verde esmeralda
+              primary: KardexStyle.verdeMedico, // Cabecera verde esmeralda
               onPrimary: Colors.white,
               onSurface: Colors.black87,
             ),
@@ -94,7 +96,7 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Paciente registrado. Edad calculada: $_edadCalculada años.'),
-            backgroundColor: const Color(0xFF10B981),
+            backgroundColor: KardexStyle.verdeMedico,
           ),
         );
       }
@@ -103,9 +105,6 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color esmeralda = Color(0xFF10B981); // Acorde a sus especificaciones
-    const Color tealBoton = Color(0xFF00B4A2); // El teal del boton de la imagen
-
     return Scaffold(
       backgroundColor: Colors.white, 
       body: SafeArea(
@@ -125,7 +124,7 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF001F3F), // Texto oscuro
+                        color: KardexStyle.verdeOscuroCabecera, // Texto oscuro
                       ),
                     ),
                     IconButton(
@@ -137,70 +136,35 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
                 const SizedBox(height: 32),
 
                 // --- Campo: Nombre Completo ---
-                _buildFieldLabel('Nombre completo'),
-                const SizedBox(height: 8),
-                TextFormField(
+                CustomKardexInput(
+                  label: 'Nombre completo',
+                  hintText: 'Ej: Juan Pérez García',
+                  icon: Icons.person_outline,
                   controller: _nombreController,
-                  validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
-                  decoration: _inputDecoration(
-                    hint: 'Ej: Juan Pérez García',
-                    icon: Icons.person_outline,
-                  ),
                 ),
                 const SizedBox(height: 24),
 
                 // --- Campo: Fecha de Nacimiento ---
-                _buildFieldLabel('Fecha de nacimiento'),
-                const SizedBox(height: 8),
-                GestureDetector(
+                CustomKardexInput(
+                  label: 'Fecha de nacimiento',
+                  hintText: _fechaNacimiento != null 
+                      ? _formatearFecha(_fechaNacimiento!) 
+                      : 'dd/mm/aaaa',
+                  hintColor: _fechaNacimiento != null ? Colors.black87 : null,
+                  icon: Icons.calendar_today_outlined,
+                  readOnly: true,
                   onTap: () => _selectDate(context),
-                  child: AbsorbPointer( // Absorbe toques para no abrir teclado
-                    child: TextFormField(
-                      decoration: InputDecoration(
-                        hintText: _fechaNacimiento != null 
-                            ? _formatearFecha(_fechaNacimiento!) 
-                            : 'dd/mm/aaaa',
-                        hintStyle: TextStyle(
-                          color: _fechaNacimiento != null ? Colors.black87 : Colors.grey[500], 
-                          fontSize: 15,
-                        ),
-                        prefixIcon: Icon(Icons.calendar_today_outlined, color: Colors.grey[500], size: 22),
-                        suffixIcon: const Icon(Icons.calendar_today, color: Colors.black87, size: 20),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      ),
-                    ),
-                  ),
+                  suffixIcon: const Icon(Icons.calendar_today, color: Colors.black87, size: 20),
                 ),
                 const SizedBox(height: 24),
 
                 // --- Campo: Diagnóstico Médico ---
-                _buildFieldLabel('Diagnóstico'),
-                const SizedBox(height: 8),
-                TextFormField(
+                CustomKardexInput(
+                  label: 'Diagnóstico',
+                  hintText: 'Ej: Neumonía adquirida en la comunidad',
+                  icon: Icons.medical_services_outlined,
                   controller: _diagnosticoController,
                   maxLines: 3,
-                  validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
-                  decoration: InputDecoration(
-                    hintText: 'Ej: Neumonía adquirida en la comunidad',
-                    hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.only(bottom: 50.0), // Alinear icono arriba
-                      child: Icon(Icons.medical_services_outlined, color: Colors.grey[500], size: 22),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  ),
                 ),
                 const SizedBox(height: 48),
 
@@ -227,7 +191,7 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
                       child: ElevatedButton(
                         onPressed: _guardarPaciente,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: tealBoton, // Esmeralda
+                          backgroundColor: KardexStyle.turquesa, // Turquesa
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -245,32 +209,6 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildFieldLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 13,
-        color: Color(0xFF4B5563), // Gris neutro
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration({required String hint, required IconData icon}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
-      prefixIcon: Icon(icon, color: Colors.grey[500], size: 22),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(24),
-        borderSide: BorderSide.none,
-      ),
-      filled: true,
-      fillColor: Colors.grey[100], // Fondo gris claro sin línea
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
     );
   }
 }
