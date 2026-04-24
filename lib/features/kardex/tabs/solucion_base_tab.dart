@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_kardex_input.dart';
 import '../../../services/kardex/kardex_service.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../../../models/patient_model.dart';
 
 class SolucionBaseTab extends StatefulWidget {
   final String pacienteId;
@@ -26,19 +28,27 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
 
   Future<void> _guardar() async {
     final nombre = _nombreController.text.trim();
-    final volumen = _volumenController.text.trim();
+    final volumenText = _volumenController.text.trim();
 
-    if (nombre.isEmpty || volumen.isEmpty) {
+    if (nombre.isEmpty || volumenText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, completa todos los campos')),
       );
       return;
     }
 
+    final double volumen = double.tryParse(volumenText) ?? 0.0;
+    final int horas = int.tryParse(_tiempoSeleccionado.split(' ')[0]) ?? 8;
+    
+    final double mlPorHora = horas > 0 ? volumen / horas : 0.0;
+    final double gotasPorMin = mlPorHora / 3;
+
     final datos = {
       'nombre': nombre,
       'volumen': volumen,
       'tiempo': _tiempoSeleccionado,
+      'ml_h': mlPorHora.toStringAsFixed(1),
+      'gotas_min': gotasPorMin.toStringAsFixed(0),
       'fecha': DateTime.now().toIso8601String(),
     };
 
@@ -211,9 +221,85 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
                 ),
               ),
             ),
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 16),
+            const Text(
+              'Soluciones Guardadas',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF111827),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildListaSoluciones(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildListaSoluciones() {
+    var box = Hive.box('pacientes');
+    PatientModel? paciente = box.get(widget.pacienteId) as PatientModel?;
+    
+    if (paciente == null) {
+      try {
+        paciente = box.values.firstWhere((p) => p is PatientModel && p.id == widget.pacienteId) as PatientModel?;
+      } catch (e) {}
+    }
+
+    final soluciones = paciente?.solucionesBase ?? [];
+
+    if (soluciones.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+          'No hay soluciones guardadas.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: soluciones.length,
+      itemBuilder: (context, index) {
+        final sol = soluciones[soluciones.length - 1 - index] as Map<dynamic, dynamic>;
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.grey[200]!),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.vaccines, color: Color(0xFF3B82F6), size: 20),
+            ),
+            title: Text(
+              '${sol['nombre']} - ${sol['volumen']} mL',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                'Ritmo: ${sol['ml_h']} ml/h | ${sol['gotas_min']} gotas/min\nTiempo: ${sol['tiempo']}',
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

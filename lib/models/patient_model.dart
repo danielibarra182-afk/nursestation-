@@ -25,6 +25,9 @@ class PatientModel extends HiveObject {
   @HiveField(6)
   String notas;
 
+  @HiveField(7)
+  List<dynamic>? solucionesBase;
+
   PatientModel({
     required this.id,
     required this.nombre,
@@ -33,5 +36,6 @@ class PatientModel extends HiveObject {
     required this.diagnostico,
     required this.medicamentos,
     required this.notas,
+    this.solucionesBase,
   });
 }
