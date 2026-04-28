@@ -73,4 +73,73 @@ class KardexService {
       }
     }
   }
+  Future<void> guardarMedicamento({
+    required String pacienteId,
+    required Map<String, dynamic> datos,
+  }) async {
+    var box = await Hive.openBox('pacientes');
+    PatientModel? paciente = box.get(pacienteId) as PatientModel?;
+    if (paciente == null) {
+      try {
+        paciente = box.values
+                .firstWhere((p) => p is PatientModel && p.id == pacienteId)
+            as PatientModel?;
+      } catch (e) {
+        paciente = null;
+      }
+    }
+
+    if (paciente != null) {
+      final listaActualizada =
+          List<dynamic>.from(paciente.medicamentos ?? []);
+      listaActualizada.add(datos);
+      paciente.medicamentos = listaActualizada;
+
+      if (paciente.isInBox) {
+        await paciente.save();
+      } else if (paciente.key != null) {
+        await box.put(paciente.key, paciente);
+      } else {
+        await box.put(paciente.id, paciente);
+      }
+    }
+  }
+
+  Future<void> actualizarMedicamento({
+    required String pacienteId,
+    required Map<String, dynamic> medicamentoActualizado,
+  }) async {
+    var box = await Hive.openBox('pacientes');
+    PatientModel? paciente = box.get(pacienteId) as PatientModel?;
+    if (paciente == null) {
+      try {
+        paciente = box.values
+                .firstWhere((p) => p is PatientModel && p.id == pacienteId)
+            as PatientModel?;
+      } catch (e) {
+        paciente = null;
+      }
+    }
+
+    if (paciente != null) {
+      final listaActualizada =
+          List<dynamic>.from(paciente.medicamentos ?? []);
+      
+      final index = listaActualizada.indexWhere(
+          (m) => m['id'] == medicamentoActualizado['id']);
+          
+      if (index != -1) {
+        listaActualizada[index] = medicamentoActualizado;
+        paciente.medicamentos = listaActualizada;
+
+        if (paciente.isInBox) {
+          await paciente.save();
+        } else if (paciente.key != null) {
+          await box.put(paciente.key, paciente);
+        } else {
+          await box.put(paciente.id, paciente);
+        }
+      }
+    }
+  }
 }

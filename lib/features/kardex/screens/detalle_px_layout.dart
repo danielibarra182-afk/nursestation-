@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../models/patient_model.dart';
 import '../tabs/solucion_base_tab.dart';
 import '../tabs/infusiones_tab.dart';
+import '../tabs/medicamentos_tab.dart';
 
 class DetallePxLayout extends StatelessWidget {
   final PatientModel paciente;
@@ -311,10 +312,7 @@ class DetallePxLayout extends StatelessWidget {
                   children: [
                     SolucionBaseTab(pacienteId: paciente.id),
                     InfusionesTab(pacienteId: paciente.id),
-                    const Center(
-                        child: Text('Vista Medicamentos',
-                            style:
-                                TextStyle(fontSize: 18, color: Colors.grey))),
+                    MedicamentosTab(pacienteId: paciente.id),
                     const Center(
                         child: Text('Vista Signos Vitales',
                             style:
