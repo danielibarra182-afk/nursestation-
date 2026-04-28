@@ -306,73 +306,249 @@ class _KardexPrincipalScreenState extends State<KardexPrincipalScreen> {
             },
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  // Cabecera: Círculo esmeralda / Squircle (como la imagen)
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: temaColor,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.person_outline,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
+              child: _buildCardContent(patient),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-                  // Detalles del paciente
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
+  Widget _buildCardContent(PatientModel patient) {
+    // 1. Vitals & Estado logic
+    final Map<dynamic, dynamic>? lastVitals = (patient.signosVitales != null && patient.signosVitales!.isNotEmpty) 
+        ? patient.signosVitales!.last as Map<dynamic, dynamic> 
+        : null;
+
+    String estado = "Estable";
+    Color estadoColor = Colors.green;
+    if (lastVitals != null) {
+      bool delicado = false;
+      final taStr = lastVitals['ta']?.toString() ?? '';
+      if (taStr.contains('/')) {
+        final parts = taStr.split('/');
+        final sys = int.tryParse(parts[0]) ?? 120;
+        final dia = int.tryParse(parts[1]) ?? 80;
+        if (sys > 130 || sys < 90 || dia > 90 || dia < 60) delicado = true;
+      }
+      final fc = int.tryParse(lastVitals['fc']?.toString() ?? '') ?? 70;
+      if (fc > 100 || fc < 60) delicado = true;
+      final temp = double.tryParse(lastVitals['temp']?.toString() ?? '') ?? 36.5;
+      if (temp > 37.5 || temp < 36.0) delicado = true;
+
+      if (delicado) {
+        estado = "Delicado";
+        estadoColor = Colors.orange;
+      }
+    }
+
+    // 2. Solución logic
+    String? solucionText;
+    if (patient.solucionesBase != null && patient.solucionesBase!.isNotEmpty) {
+      final lastSol = patient.solucionesBase!.last as Map<dynamic, dynamic>;
+      solucionText = "${lastSol['nombre'] ?? 'Sol.'} ${lastSol['ml_h'] ?? '-'} mL/h";
+    }
+
+    // 3. Meds logic
+    String? nextMedText;
+    if (patient.medicamentos.isNotEmpty) {
+      DateTime now = DateTime.now();
+      DateTime? closestTime;
+      String? medName;
+      for (var medDynamic in patient.medicamentos) {
+        final med = medDynamic as Map<dynamic, dynamic>;
+        final horarios = med['horarios'] as List<dynamic>? ?? [];
+        for (var horario in horarios) {
+          final timeStr = horario.toString();
+          final parts = timeStr.split(':');
+          if (parts.length == 2) {
+            final hour = int.tryParse(parts[0]) ?? 0;
+            final minute = int.tryParse(parts[1]) ?? 0;
+            DateTime medDate = DateTime(now.year, now.month, now.day, hour, minute);
+            if (medDate.isBefore(now)) medDate = medDate.add(const Duration(days: 1));
+            if (closestTime == null || medDate.isBefore(closestTime)) {
+              closestTime = medDate;
+              medName = med['nombre']?.toString();
+            }
+          }
+        }
+      }
+      if (closestTime != null && medName != null) {
+        final hourStr = closestTime.hour.toString().padLeft(2, '0');
+        final minStr = closestTime.minute.toString().padLeft(2, '0');
+        nextMedText = "$medName a las $hourStr:$minStr";
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: temaColor,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.person_outline, color: Colors.white, size: 30),
+            ),
+            const SizedBox(width: 16),
+            // Patient Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: Text(
                           patient.nombre,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF001F3F),
-                          ),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF001F3F)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Exp: ${patient.id.substring(0, 8)}  •  ${patient.edad} años',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.blueGrey,
+                      ),
+                      if (solucionText != null) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 4,
+                          child: Text(
+                            solucionText,
+                            style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          patient.diagnostico.isNotEmpty
-                              ? patient.diagnostico
-                              : 'SD',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.blueGrey,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                    ),
+                    ],
                   ),
-
-                  // Flecha de navegación a la derecha
-                  const Icon(
-                    Icons.chevron_right,
-                    color: Colors.grey,
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Exp: ${patient.id.substring(0, 8)}  •  ${patient.edad} años',
+                          style: const TextStyle(fontSize: 13, color: Colors.blueGrey),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              patient.diagnostico.isNotEmpty ? patient.diagnostico : 'SD',
+                              style: const TextStyle(fontSize: 13, color: Colors.blueGrey),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (nextMedText != null) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.medication, size: 12, color: Colors.purple[400]),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      nextMedText,
+                                      style: const TextStyle(fontSize: 11, color: Colors.blueGrey, fontWeight: FontWeight.w500),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if (lastVitals != null)
+                            Text(
+                              estado,
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: estadoColor),
+                            ),
+                          const SizedBox(height: 4),
+                          const Icon(Icons.chevron_right, color: Colors.grey),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-          ),
+          ],
         ),
+        // Divider
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12.0),
+          child: Divider(color: Color(0xFFF3F4F6), height: 1),
+        ),
+        // Signos Vitales Chips
+        if (lastVitals != null)
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (lastVitals['ta'] != null && lastVitals['ta'].toString().isNotEmpty)
+                _buildVitalChip(Icons.monitor_heart, lastVitals['ta'].toString(), const Color(0xFFFEE2E2), const Color(0xFFEF4444)),
+              if (lastVitals['fc'] != null && lastVitals['fc'].toString().isNotEmpty)
+                _buildVitalChip(Icons.favorite, "${lastVitals['fc']} lpm", const Color(0xFFFCE7F3), const Color(0xFFEC4899)),
+              if (lastVitals['fr'] != null && lastVitals['fr'].toString().isNotEmpty)
+                _buildVitalChip(Icons.air, "${lastVitals['fr']} rpm", const Color(0xFFE0E7FF), const Color(0xFF4F46E5)),
+              if (lastVitals['temp'] != null && lastVitals['temp'].toString().isNotEmpty)
+                _buildVitalChip(Icons.thermostat, "${lastVitals['temp']}°C", const Color(0xFFFFEDD5), const Color(0xFFF97316)),
+              if (lastVitals['spo2'] != null && lastVitals['spo2'].toString().isNotEmpty)
+                _buildVitalChip(Icons.water_drop, "SpO2 ${lastVitals['spo2']}%", const Color(0xFFDBEAFE), const Color(0xFF3B82F6)),
+              if (lastVitals['glucosa'] != null && lastVitals['glucosa'].toString().isNotEmpty)
+                _buildVitalChip(Icons.bloodtype, "${lastVitals['glucosa']} mg/dL", const Color(0xFFF3E8FF), const Color(0xFF9333EA)),
+            ],
+          )
+        else
+          const Text("Sin signos vitales registrados", style: TextStyle(fontSize: 12, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildVitalChip(IconData icon, String text, Color bgColor, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: textColor),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+        ],
       ),
     );
   }

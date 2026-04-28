@@ -15,6 +15,8 @@ class SolucionBaseTab extends StatefulWidget {
 
 class _SolucionBaseTabState extends State<SolucionBaseTab> {
   bool _mostrarFormulario = true;
+  String? _editandoId;
+  String? _fechaOriginal;
   
   final _nombreController = TextEditingController();
   final _volumenController = TextEditingController();
@@ -46,7 +48,29 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
     _nombreController.dispose();
     _volumenController.dispose();
     _tiempoController.dispose();
+    _tiempoController.dispose();
     super.dispose();
+  }
+
+  void _abrirFormulario([dynamic solucion, int? index]) {
+    setState(() {
+      _mostrarFormulario = true;
+      if (solucion != null) {
+        // En caso de que haya registros antiguos sin ID, usamos el índice o el timestamp como fallback
+        _editandoId = solucion['id'] ?? 'legacy_$index';
+        _fechaOriginal = solucion['fecha'];
+        _nombreController.text = solucion['nombre']?.toString() ?? '';
+        _volumenController.text = solucion['volumen']?.toString() ?? '';
+        String t = solucion['tiempo']?.toString() ?? '';
+        _tiempoController.text = t.replaceAll(RegExp(r'[^0-9]'), '');
+      } else {
+        _editandoId = null;
+        _fechaOriginal = null;
+        _nombreController.clear();
+        _volumenController.clear();
+        _tiempoController.clear();
+      }
+    });
   }
 
   Future<void> _guardar() async {
@@ -68,18 +92,26 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
     final double gotasPorMin = mlPorHora / 3;
 
     final datos = {
+      'id': _editandoId ?? DateTime.now().millisecondsSinceEpoch.toString(),
       'nombre': nombre,
       'volumen': volumen,
       'tiempo': '${horas}h',
       'ml_h': mlPorHora.toStringAsFixed(1),
       'gotas_min': gotasPorMin.toStringAsFixed(0),
-      'fecha': DateTime.now().toIso8601String(),
+      'fecha': _fechaOriginal ?? DateTime.now().toIso8601String(),
     };
 
-    await KardexService().guardarSolucionBase(
-      pacienteId: widget.pacienteId,
-      datos: datos,
-    );
+    if (_editandoId == null) {
+      await KardexService().guardarSolucionBase(
+        pacienteId: widget.pacienteId,
+        datos: datos,
+      );
+    } else {
+      await KardexService().actualizarSolucionBase(
+        pacienteId: widget.pacienteId,
+        solucionActualizada: datos,
+      );
+    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -91,6 +123,9 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
       _nombreController.clear();
       _volumenController.clear();
       _tiempoController.clear();
+      _tiempoController.clear();
+      _editandoId = null;
+      _fechaOriginal = null;
       setState(() {
         _mostrarFormulario = false;
       });
@@ -136,11 +171,7 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _mostrarFormulario = true;
-                      });
-                    },
+                    onPressed: () => _abrirFormulario(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2563EB), // Color azul primario
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -232,6 +263,8 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
                   onPressed: () {
                     setState(() {
                       _mostrarFormulario = false;
+                      _editandoId = null;
+                      _fechaOriginal = null;
                     });
                   },
                 )
@@ -261,6 +294,7 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
                       label: 'Volumen (mL)',
                       hintText: '1000',
                       controller: _volumenController,
+                      keyboardType: TextInputType.number,
                     ),
                   ],
                 ),
@@ -276,6 +310,7 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
                       label: 'Tiempo (horas)',
                       hintText: 'Ej: 8',
                       controller: _tiempoController,
+                      keyboardType: TextInputType.number,
                     ),
                   ],
                 ),
@@ -297,9 +332,9 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                'Guardar Solución Base',
-                style: TextStyle(
+              child: Text(
+                _editandoId == null ? 'Guardar Solución Base' : 'Actualizar Solución Base',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -331,8 +366,68 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
           }
         }
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
+        return Dismissible(
+          key: Key(sol['id']?.toString() ?? UniqueKey().toString()),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: const Icon(Icons.delete, color: Colors.red),
+          ),
+          confirmDismiss: (direction) async {
+            return await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text("Eliminar Registro"),
+                  content: const Text("¿Estás seguro de eliminar esta solución base?"),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text("Cancelar"),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+          onDismissed: (direction) {
+            if (sol['id'] != null) {
+              KardexService().eliminarSolucionBase(
+                pacienteId: widget.pacienteId,
+                solucionId: sol['id'],
+              );
+            } else {
+              var box = Hive.box('pacientes');
+              PatientModel? paciente = box.get(widget.pacienteId) as PatientModel?;
+              if (paciente == null) {
+                try {
+                  paciente = box.values.firstWhere((p) => p is PatientModel && p.id == widget.pacienteId) as PatientModel?;
+                } catch (e) {}
+              }
+              if (paciente != null) {
+                final lista = List<dynamic>.from(paciente.solucionesBase ?? []);
+                lista.removeAt(solIndex);
+                paciente.solucionesBase = lista;
+                if (paciente.isInBox) {
+                  paciente.save();
+                } else if (paciente.key != null) {
+                  box.put(paciente.key, paciente);
+                }
+              }
+            }
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -385,30 +480,16 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red, size: 20),
-                    onPressed: () async {
-                      // Eliminar la solución (opcional pero funcional)
-                      var box = Hive.box('pacientes');
-                      PatientModel? paciente = box.get(widget.pacienteId) as PatientModel?;
-                      if (paciente == null) {
-                        try {
-                          paciente = box.values.firstWhere((p) => p is PatientModel && p.id == widget.pacienteId) as PatientModel?;
-                        } catch (e) {}
-                      }
-                      if (paciente != null) {
-                        final lista = List<dynamic>.from(paciente.solucionesBase ?? []);
-                        lista.removeAt(solIndex);
-                        paciente.solucionesBase = lista;
-                        if (paciente.isInBox) {
-                          await paciente.save();
-                        } else if (paciente.key != null) {
-                          await box.put(paciente.key, paciente);
-                        }
-                      }
-                    },
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.zero,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Color(0xFF9CA3AF), size: 20),
+                        onPressed: () => _abrirFormulario(sol, solIndex),
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -527,7 +608,7 @@ class _SolucionBaseTabState extends State<SolucionBaseTab> {
               ),
             ],
           ),
-        );
+        ));
       },
     );
   }

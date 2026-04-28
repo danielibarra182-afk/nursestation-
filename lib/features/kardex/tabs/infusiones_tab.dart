@@ -16,6 +16,8 @@ class InfusionesTab extends StatefulWidget {
 
 class _InfusionesTabState extends State<InfusionesTab> {
   bool _mostrarFormulario = true;
+  String? _editandoId;
+  String? _fechaOriginal;
   String _categoriaSeleccionada = 'Medicamento';
 
   final _medicamentoController = TextEditingController();
@@ -57,7 +59,29 @@ class _InfusionesTabState extends State<InfusionesTab> {
     _medicamentoController.dispose();
     _volumenController.dispose();
     _velocidadController.dispose();
+    _velocidadController.dispose();
     super.dispose();
+  }
+
+  void _abrirFormulario([dynamic infusion, int? index]) {
+    setState(() {
+      _mostrarFormulario = true;
+      if (infusion != null) {
+        _editandoId = infusion['id'] ?? 'legacy_$index';
+        _fechaOriginal = infusion['fecha'];
+        _medicamentoController.text = infusion['nombre']?.toString() ?? '';
+        _volumenController.text = infusion['volumen']?.toString() ?? '';
+        _velocidadController.text = infusion['velocidad']?.toString() ?? '';
+        _categoriaSeleccionada = infusion['categoria']?.toString() ?? 'Medicamento';
+      } else {
+        _editandoId = null;
+        _fechaOriginal = null;
+        _medicamentoController.clear();
+        _volumenController.clear();
+        _velocidadController.clear();
+        _categoriaSeleccionada = 'Medicamento';
+      }
+    });
   }
 
   Future<void> _guardar() async {
@@ -73,17 +97,25 @@ class _InfusionesTabState extends State<InfusionesTab> {
     }
 
     final datos = {
+      'id': _editandoId ?? DateTime.now().millisecondsSinceEpoch.toString(),
       'nombre': nombre,
       'volumen': double.tryParse(volumenText) ?? 0.0,
       'velocidad': velocidadText,
       'categoria': _categoriaSeleccionada,
-      'fecha': DateTime.now().toIso8601String(),
+      'fecha': _fechaOriginal ?? DateTime.now().toIso8601String(),
     };
 
-    await KardexService().guardarInfusion(
-      pacienteId: widget.pacienteId,
-      datos: datos,
-    );
+    if (_editandoId == null) {
+      await KardexService().guardarInfusion(
+        pacienteId: widget.pacienteId,
+        datos: datos,
+      );
+    } else {
+      await KardexService().actualizarInfusion(
+        pacienteId: widget.pacienteId,
+        infusionActualizada: datos,
+      );
+    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -94,7 +126,10 @@ class _InfusionesTabState extends State<InfusionesTab> {
       );
       _medicamentoController.clear();
       _volumenController.clear();
+      _volumenController.clear();
       _velocidadController.clear();
+      _editandoId = null;
+      _fechaOriginal = null;
       setState(() {
         _categoriaSeleccionada = 'Medicamento';
         _mostrarFormulario = false;
@@ -142,11 +177,7 @@ class _InfusionesTabState extends State<InfusionesTab> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _mostrarFormulario = true;
-                      });
-                    },
+                    onPressed: () => _abrirFormulario(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
                           const Color(0xFF2563EB), // Color azul primario
@@ -215,9 +246,9 @@ class _InfusionesTabState extends State<InfusionesTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Nueva Infusión',
-                      style: TextStyle(
+                    Text(
+                      _editandoId == null ? 'Nueva Infusión' : 'Editar Infusión',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF111827),
@@ -244,6 +275,8 @@ class _InfusionesTabState extends State<InfusionesTab> {
                   onPressed: () {
                     setState(() {
                       _mostrarFormulario = false;
+                      _editandoId = null;
+                      _fechaOriginal = null;
                     });
                   },
                 )
@@ -318,6 +351,7 @@ class _InfusionesTabState extends State<InfusionesTab> {
                       label: 'Volumen (mL)',
                       hintText: 'Ej: 500',
                       controller: _volumenController,
+                      keyboardType: TextInputType.number,
                     ),
                   ],
                 ),
@@ -333,6 +367,7 @@ class _InfusionesTabState extends State<InfusionesTab> {
                       label: 'Velocidad',
                       hintText: 'Ej: 20 mL/h',
                       controller: _velocidadController,
+                      keyboardType: TextInputType.number,
                     ),
                   ],
                 ),
@@ -354,9 +389,9 @@ class _InfusionesTabState extends State<InfusionesTab> {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                'Guardar Infusión',
-                style: TextStyle(
+              child: Text(
+                _editandoId == null ? 'Guardar Infusión' : 'Actualizar Infusión',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -395,7 +430,67 @@ class _InfusionesTabState extends State<InfusionesTab> {
         if (categoria == 'Nutrición') catIcon = Icons.local_dining;
         if (categoria == 'Otro') catIcon = Icons.vaccines;
 
-        return Container(
+        return Dismissible(
+          key: Key(inf['id']?.toString() ?? UniqueKey().toString()),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: const Icon(Icons.delete, color: Colors.red),
+          ),
+          confirmDismiss: (direction) async {
+            return await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text("Eliminar Registro"),
+                  content: const Text("¿Estás seguro de eliminar esta infusión?"),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text("Cancelar"),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+          onDismissed: (direction) {
+            if (inf['id'] != null) {
+              KardexService().eliminarInfusion(
+                pacienteId: widget.pacienteId,
+                infusionId: inf['id'],
+              );
+            } else {
+              var box = Hive.box('pacientes');
+              PatientModel? paciente = box.get(widget.pacienteId) as PatientModel?;
+              if (paciente == null) {
+                try {
+                  paciente = box.values.firstWhere((p) => p is PatientModel && p.id == widget.pacienteId) as PatientModel?;
+                } catch (e) {}
+              }
+              if (paciente != null) {
+                final lista = List<dynamic>.from(paciente.infusiones ?? []);
+                lista.removeAt(infIndex);
+                paciente.infusiones = lista;
+                if (paciente.isInBox) {
+                  paciente.save();
+                } else if (paciente.key != null) {
+                  box.put(paciente.key, paciente);
+                }
+              }
+            }
+          },
+          child: Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -459,33 +554,16 @@ class _InfusionesTabState extends State<InfusionesTab> {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red, size: 20),
-                    onPressed: () async {
-                      var box = Hive.box('pacientes');
-                      PatientModel? paciente =
-                          box.get(widget.pacienteId) as PatientModel?;
-                      if (paciente == null) {
-                        try {
-                          paciente = box.values.firstWhere((p) =>
-                              p is PatientModel &&
-                              p.id == widget.pacienteId) as PatientModel?;
-                        } catch (e) {}
-                      }
-                      if (paciente != null) {
-                        final lista =
-                            List<dynamic>.from(paciente.infusiones ?? []);
-                        lista.removeAt(infIndex);
-                        paciente.infusiones = lista;
-                        if (paciente.isInBox) {
-                          await paciente.save();
-                        } else if (paciente.key != null) {
-                          await box.put(paciente.key, paciente);
-                        }
-                      }
-                    },
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.zero,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Color(0xFF9CA3AF), size: 20),
+                        onPressed: () => _abrirFormulario(inf, infIndex),
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -557,7 +635,7 @@ class _InfusionesTabState extends State<InfusionesTab> {
               ),
             ],
           ),
-        );
+        ));
       },
     );
   }

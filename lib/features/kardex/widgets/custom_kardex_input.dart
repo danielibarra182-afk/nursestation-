@@ -12,6 +12,7 @@ class CustomKardexInput extends StatelessWidget {
   final Widget? suffixIcon;
   final Color? hintColor;
   final String? Function(String?)? validator;
+  final TextInputType? keyboardType;
 
   const CustomKardexInput({
     super.key,
@@ -25,6 +26,7 @@ class CustomKardexInput extends StatelessWidget {
     this.suffixIcon,
     this.hintColor,
     this.validator,
+    this.keyboardType,
   });
 
   @override
@@ -46,6 +48,7 @@ class CustomKardexInput extends StatelessWidget {
           maxLines: maxLines,
           readOnly: readOnly,
           onTap: onTap,
+          keyboardType: keyboardType,
           validator: validator ?? (value) {
             if (!readOnly && (value == null || value.trim().isEmpty)) {
               return 'Campo requerido';

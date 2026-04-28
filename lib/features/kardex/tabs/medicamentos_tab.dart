@@ -16,6 +16,7 @@ class MedicamentosTab extends StatefulWidget {
 
 class _MedicamentosTabState extends State<MedicamentosTab> {
   bool _mostrarFormulario = false;
+  String? _editandoId;
   final KardexService _kardexService = KardexService();
 
   final TextEditingController _nombreController = TextEditingController();
@@ -27,6 +28,25 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
 
   bool get _isValid {
     return _nombreController.text.trim().isNotEmpty && _horariosList.isNotEmpty;
+  }
+
+  void _abrirFormulario([dynamic med]) {
+    setState(() {
+      _mostrarFormulario = true;
+      if (med != null) {
+        _editandoId = med['id'];
+        _nombreController.text = med['nombre'] ?? '';
+        _dosisController.text = med['dosis'] ?? '';
+        _viaController.text = med['via'] ?? 'Intravenosa (IV)';
+        _horariosList = List<String>.from(med['horarios'] ?? []);
+      } else {
+        _editandoId = null;
+        _nombreController.clear();
+        _dosisController.clear();
+        _viaController.text = 'Intravenosa (IV)';
+        _horariosList.clear();
+      }
+    });
   }
 
   void _agregarHorario() async {
@@ -57,22 +77,55 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
   Future<void> _registrarMedicamento() async {
     if (!_isValid) return;
 
-    final data = {
-      'id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'nombre': _nombreController.text.trim(),
-      'dosis': _dosisController.text.trim(),
-      'via': _viaController.text.trim(),
-      'horarios': List<String>.from(_horariosList),
-      'fecha_registro': DateTime.now().toIso8601String(),
-    };
+    if (_editandoId != null) {
+      // Find the existing to preserve administrados
+      var box = Hive.box('pacientes');
+      PatientModel? paciente = box.get(widget.pacienteId) as PatientModel?;
+      List<String> administrados = [];
+      String fechaRegistro = DateTime.now().toIso8601String();
 
-    await _kardexService.guardarMedicamento(
-      pacienteId: widget.pacienteId,
-      datos: data,
-    );
+      if (paciente != null) {
+        final meds = List<dynamic>.from(paciente.medicamentos ?? []);
+        final med = meds.firstWhere((m) => m['id'] == _editandoId, orElse: () => null);
+        if (med != null) {
+          administrados = List<String>.from(med['administrados'] ?? []);
+          fechaRegistro = med['fecha_registro'] ?? fechaRegistro;
+        }
+      }
+
+      final data = {
+        'id': _editandoId,
+        'nombre': _nombreController.text.trim(),
+        'dosis': _dosisController.text.trim(),
+        'via': _viaController.text.trim(),
+        'horarios': List<String>.from(_horariosList),
+        'administrados': administrados,
+        'fecha_registro': fechaRegistro,
+      };
+
+      await _kardexService.actualizarMedicamento(
+        pacienteId: widget.pacienteId,
+        medicamentoActualizado: data,
+      );
+    } else {
+      final data = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'nombre': _nombreController.text.trim(),
+        'dosis': _dosisController.text.trim(),
+        'via': _viaController.text.trim(),
+        'horarios': List<String>.from(_horariosList),
+        'fecha_registro': DateTime.now().toIso8601String(),
+      };
+
+      await _kardexService.guardarMedicamento(
+        pacienteId: widget.pacienteId,
+        datos: data,
+      );
+    }
 
     setState(() {
       _mostrarFormulario = false;
+      _editandoId = null;
       _nombreController.clear();
       _dosisController.clear();
       _viaController.text = 'Intravenosa (IV)';
@@ -81,8 +134,8 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Medicamento registrado exitosamente'),
+        SnackBar(
+          content: Text(_editandoId != null ? 'Medicamento actualizado exitosamente' : 'Medicamento registrado exitosamente'),
           backgroundColor: KardexStyle.verdeMedico,
         ),
       );
@@ -207,11 +260,7 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
               ),
               const SizedBox(height: 32),
               ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _mostrarFormulario = true;
-                  });
-                },
+                onPressed: _abrirFormulario,
                 icon: const Icon(Icons.add, color: Colors.white),
                 label: const Text(
                   'Agregar medicamento',
@@ -246,11 +295,7 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _mostrarFormulario = true;
-                });
-              },
+              onPressed: _abrirFormulario,
               icon: const Icon(Icons.add, color: Colors.white),
               label: const Text(
                 'Agregar medicamento',
@@ -287,126 +332,173 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
 
   Widget _buildMedicamentoCard(dynamic med) {
     final horarios = List<String>.from(med['horarios'] ?? []);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return Dismissible(
+      key: Key(med['id'] ?? UniqueKey().toString()),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Icon(Icons.delete, color: Colors.white),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9),
-              borderRadius: BorderRadius.circular(12),
+      confirmDismiss: (direction) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text("Confirmar eliminación"),
+              content: const Text("¿Estás seguro de que deseas eliminar este medicamento?"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      onDismissed: (direction) async {
+        await _kardexService.eliminarMedicamento(
+          pacienteId: widget.pacienteId,
+          medicamentoId: med['id'],
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Medicamento eliminado'),
+              backgroundColor: Colors.red,
             ),
-            child: Transform.rotate(
-              angle: -math.pi / 4,
-              child: const Icon(
-                Icons.medication_outlined,
-                color: Color(0xFF10B981),
-                size: 24,
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-            ),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Transform.rotate(
+                  angle: -math.pi / 4,
+                  child: const Icon(
+                    Icons.medication_outlined,
+                    color: Color(0xFF10B981),
+                    size: 24,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        med['nombre'] ?? '',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF111827),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            med['nombre'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        // Implement delete functionality here
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.only(left: 8.0, bottom: 8.0),
-                        child: Icon(
-                          Icons.close,
-                          color: Colors.red,
-                          size: 18,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RichText(
+                            text: TextSpan(
+                              text: 'Dosis: ',
+                              style: const TextStyle(
+                                  color: Color(0xFF6B7280), fontSize: 14),
+                              children: [
+                                TextSpan(
+                                  text: med['dosis'] ?? '',
+                                  style: const TextStyle(
+                                      color: Color(0xFF111827),
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: RichText(
+                            text: TextSpan(
+                              text: 'Vía: ',
+                              style: const TextStyle(
+                                  color: Color(0xFF6B7280), fontSize: 14),
+                              children: [
+                                TextSpan(
+                                  text: _shortenVia(med['via'] ?? ''),
+                                  style: const TextStyle(
+                                      color: Color(0xFF111827),
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (horarios.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                            horarios.map((h) => _buildHorarioChip(h, med)).toList(),
+                      ),
+                    ],
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () => _abrirFormulario(med),
+                        child: const Padding(
+                          padding: EdgeInsets.only(top: 8.0),
+                          child: Icon(Icons.edit, size: 20, color: Color(0xFF9CA3AF)),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'Dosis: ',
-                          style: const TextStyle(
-                              color: Color(0xFF6B7280), fontSize: 14),
-                          children: [
-                            TextSpan(
-                              text: med['dosis'] ?? '',
-                              style: const TextStyle(
-                                  color: Color(0xFF111827),
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'Vía: ',
-                          style: const TextStyle(
-                              color: Color(0xFF6B7280), fontSize: 14),
-                          children: [
-                            TextSpan(
-                              text: _shortenVia(med['via'] ?? ''),
-                              style: const TextStyle(
-                                  color: Color(0xFF111827),
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (horarios.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                        horarios.map((h) => _buildHorarioChip(h, med)).toList(),
-                  ),
-                ]
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
     );
   }
 
@@ -526,19 +618,19 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Nuevo Medicamento',
-                        style: TextStyle(
+                        _editandoId != null ? 'Editar Medicamento' : 'Nuevo Medicamento',
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF111827),
                         ),
                       ),
-                      Text(
+                      const Text(
                         'Asignar dosis y horario',
                         style: TextStyle(
                           fontSize: 14,
@@ -552,6 +644,7 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
                   onPressed: () {
                     setState(() {
                       _mostrarFormulario = false;
+                      _editandoId = null;
                     });
                   },
                   icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
@@ -729,6 +822,7 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
                     onPressed: () {
                       setState(() {
                         _mostrarFormulario = false;
+                        _editandoId = null;
                       });
                     },
                     style: TextButton.styleFrom(
@@ -762,9 +856,9 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'Registrar Medicamento',
-                      style: TextStyle(
+                    child: Text(
+                      _editandoId != null ? 'Actualizar Medicamento' : 'Registrar Medicamento',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
