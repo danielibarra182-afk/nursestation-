@@ -404,29 +404,32 @@ class _GoteoIVViewState extends State<GoteoIVView>
                                 borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                    _isGuideActive
+                                        ? Icons.stop
+                                        : Icons.play_arrow,
+                                    size: 20),
+                                const SizedBox(width: 8),
+                                Text(
                                   _isGuideActive
-                                      ? Icons.stop
-                                      : Icons.play_arrow,
-                                  size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                _isGuideActive
-                                    ? 'Detener Guía de Ajuste'
-                                    : 'Iniciar Guía de Ajuste',
-                                style: const TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.water_drop,
-                                  size: 16, color: Colors.lightBlueAccent),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.volume_up,
-                                  size: 16, color: Colors.grey),
-                            ],
+                                      ? 'Detener Guía de Ajuste'
+                                      : 'Iniciar Guía de Ajuste',
+                                  style: const TextStyle(
+                                      fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.water_drop,
+                                    size: 16, color: Colors.lightBlueAccent),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.volume_up,
+                                    size: 16, color: Colors.grey),
+                              ],
+                            ),
                           ),
                         ),
                       ),

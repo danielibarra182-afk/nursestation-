@@ -27,13 +27,15 @@ class PatientModelAdapter extends TypeAdapter<PatientModel> {
       solucionesBase: (fields[7] as List?)?.cast<dynamic>(),
       infusiones: (fields[8] as List?)?.cast<dynamic>(),
       signosVitales: (fields[9] as List?)?.cast<dynamic>(),
+      fechaNacimiento: fields[10] as String?,
+      alergias: fields[11] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, PatientModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +55,11 @@ class PatientModelAdapter extends TypeAdapter<PatientModel> {
       ..writeByte(8)
       ..write(obj.infusiones)
       ..writeByte(9)
-      ..write(obj.signosVitales);
+      ..write(obj.signosVitales)
+      ..writeByte(10)
+      ..write(obj.fechaNacimiento)
+      ..writeByte(11)
+      ..write(obj.alergias);
   }
 
   @override

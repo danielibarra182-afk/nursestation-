@@ -676,21 +676,22 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
+                    isExpanded: true,
                     value: _viaController.text.isNotEmpty
                         ? _viaController.text
                         : 'Intravenosa (IV)',
                     icon: const Icon(Icons.keyboard_arrow_down,
                         color: KardexStyle.verdeMedico),
                     decoration: InputDecoration(
-                      labelText: 'Vía de administración',
+                      labelText: 'Vía de admin...',
                       labelStyle: const TextStyle(
-                          color: Color(0xFF6B7280), fontSize: 14),
+                          color: Color(0xFF6B7280), fontSize: 13),
                       prefixIcon: const Icon(Icons.route_outlined,
-                          color: KardexStyle.verdeMedico),
+                          color: KardexStyle.verdeMedico, size: 20),
                       filled: true,
                       fillColor: KardexStyle.grisCampo,
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 16),
+                          horizontal: 12, vertical: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -709,38 +710,48 @@ class _MedicamentosTabState extends State<MedicamentosTab> {
                       DropdownMenuItem(
                           value: 'Intravenosa (IV)',
                           child: Text('Intravenosa (IV)',
-                              style: TextStyle(fontSize: 14))),
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13))),
                       DropdownMenuItem(
                           value: 'Intramuscular (IM)',
                           child: Text('Intramuscular (IM)',
-                              style: TextStyle(fontSize: 14))),
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13))),
                       DropdownMenuItem(
                           value: 'Subcutánea (SC)',
                           child: Text('Subcutánea (SC)',
-                              style: TextStyle(fontSize: 14))),
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13))),
                       DropdownMenuItem(
                           value: 'Oral (VO)',
                           child: Text('Oral (VO)',
-                              style: TextStyle(fontSize: 14))),
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13))),
                       DropdownMenuItem(
                           value: 'Sublingual (SL)',
                           child: Text('Sublingual (SL)',
-                              style: TextStyle(fontSize: 14))),
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13))),
                       DropdownMenuItem(
                           value: 'Oftálmica (OFT)',
                           child: Text('Oftálmica (OFT)',
-                              style: TextStyle(fontSize: 14))),
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13))),
                       DropdownMenuItem(
                           value: 'Ótica',
-                          child: Text('Ótica', style: TextStyle(fontSize: 14))),
+                          child: Text('Ótica',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13))),
                       DropdownMenuItem(
                           value: 'Inhalatoria (INH)',
                           child: Text('Inhalatoria (INH)',
-                              style: TextStyle(fontSize: 14))),
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13))),
                       DropdownMenuItem(
                           value: 'Tópica',
-                          child:
-                              Text('Tópica', style: TextStyle(fontSize: 14))),
+                          child: Text('Tópica',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 13))),
                     ],
                     onChanged: (value) {
                       if (value != null) {

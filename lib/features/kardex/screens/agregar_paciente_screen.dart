@@ -16,6 +16,7 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
   
   final _nombreController = TextEditingController();
   final _diagnosticoController = TextEditingController();
+  final _alergiasController = TextEditingController();
   
   DateTime? _fechaNacimiento;
   int _edadCalculada = 0;
@@ -24,6 +25,7 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
   void dispose() {
     _nombreController.dispose();
     _diagnosticoController.dispose();
+    _alergiasController.dispose();
     super.dispose();
   }
 
@@ -86,6 +88,8 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
         diagnostico: _diagnosticoController.text.trim(),
         medicamentos: [], // Default mock
         notas: '', // Default mock
+        fechaNacimiento: _formatearFecha(_fechaNacimiento!),
+        alergias: _alergiasController.text.trim().isNotEmpty ? _alergiasController.text.trim() : 'Ninguna',
       );
 
       final box = Hive.box('pacientes');
@@ -165,6 +169,16 @@ class _AgregarPacienteScreenState extends State<AgregarPacienteScreen> {
                   icon: Icons.medical_services_outlined,
                   controller: _diagnosticoController,
                   maxLines: 3,
+                ),
+                const SizedBox(height: 24),
+
+                // --- Campo: Alergias ---
+                CustomKardexInput(
+                  label: 'Alergias',
+                  hintText: 'Ej: Penicilina (Dejar en blanco si no hay)',
+                  icon: Icons.warning_amber_rounded,
+                  controller: _alergiasController,
+                  maxLines: 2,
                 ),
                 const SizedBox(height: 48),
 

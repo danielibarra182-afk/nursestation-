@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'goteo_iv_view.dart';
 import 'flujo_iv_view.dart';
 import 'goteo_real_view.dart';
+import '../../widgets/master_layout.dart';
 
 class CalculadoraMaestraScreen extends StatefulWidget {
   const CalculadoraMaestraScreen({super.key});
@@ -82,81 +83,43 @@ class _CalculadoraMaestraScreenState extends State<CalculadoraMaestraScreen>
     // Definimos el color principal usado en el diseño
     const primaryBlue = Color(0xFF0056D2);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9), // Fondo azul/gris muy claro
-      body: Column(
-        children: [
-          const SizedBox(height: 40), // Espaciado superior
-          
-          // --- Sección del Header (Icono circular y textos) ---
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: _currentActiveColor,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              _currentIcon,
-              color: Colors.white,
-              size: _tabController.index == 2 ? 40 : 32,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _currentTitle,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _currentSubtitle,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          const SizedBox(height: 32),
-
-          // --- TabBar central tipo "Botones separados" ---
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Container(
-              height: 50,
-              child: TabBar(
-                controller: _tabController,
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent, // Quita la linea base
-                indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: _currentActiveColor,
-                ),
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey.shade700,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-                tabs: [
-                  _buildTab(0, 'Goteo IV', Icons.water_drop_outlined, Icons.water_drop),
-                  _buildTab(1, 'Flujo', Icons.timer_outlined, Icons.timer),
-                  _buildTab(2, 'Goteo Real', Icons.colorize, Icons.colorize),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // --- Vistas de cada pestaña ---
-          Expanded(
-            child: TabBarView(
+    return MasterLayout(
+      title: _currentTitle,
+      subtitle: _currentSubtitle,
+      icon: _currentIcon,
+      primaryColor: _currentActiveColor,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(74),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 24.0),
+          child: Container(
+            height: 50,
+            child: TabBar(
               controller: _tabController,
-              children: const [
-                GoteoIVView(),
-                FlujoIVView(),
-                GoteoRealView(),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent, // Quita la linea base
+              indicator: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: _currentActiveColor,
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey.shade700,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+              tabs: [
+                _buildTab(0, 'Goteo IV', Icons.water_drop_outlined, Icons.water_drop),
+                _buildTab(1, 'Flujo', Icons.timer_outlined, Icons.timer),
+                _buildTab(2, 'Goteo Real', Icons.colorize, Icons.colorize),
               ],
             ),
           ),
+        ),
+      ),
+      child: TabBarView(
+        controller: _tabController,
+        children: const [
+          GoteoIVView(),
+          FlujoIVView(),
+          GoteoRealView(),
         ],
       ),
     );
