@@ -31,3 +31,4 @@ flutter:
 
   assets:
     - assets/audio/gota.mp3
+    - assets/data/medicamentos.json

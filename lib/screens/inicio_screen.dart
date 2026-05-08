@@ -4,7 +4,7 @@ import '../widgets/top_icon.dart';
 import 'goteo_flujo/calculadora_maestra_screen.dart';
 import '../features/kardex/screens/agregar_paciente_screen.dart';
 import '../features/kardex/screens/kardex_principal_screen.dart';
-import '../features/farmacologia/screens/farmaco_menu_screen.dart';
+import '../features/farmacologia/screens/farmaco_list_screen.dart';
 import '../widgets/master_layout.dart';
 
 class InicioScreen extends StatefulWidget {
@@ -111,7 +111,7 @@ class _InicioScreenState extends State<InicioScreen> {
         content = const KardexPrincipalScreen();
         break;
       case 3:
-        content = const FarmacoMenuScreen();
+        content = const FarmacoListScreen();
         break;
       case 4:
         content = _buildPlaceholder('Cuenta');
