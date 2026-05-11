@@ -45,30 +45,36 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final farmacos = await _farmacoService.cargarMedicamentos();
+    _allFarmacos = farmacos;
+    _applyFiltersInternal(); // Llamamos a la lógica sin setState interno
     setState(() {
-      _allFarmacos = farmacos;
-      _applyFilters();
       _isLoading = false;
     });
   }
 
   void _applyFilters() {
     setState(() {
-      _filteredFarmacos = _allFarmacos.where((med) {
-        // Lógica de filtrado por categoría
-        final matchesCategory = _selectedCategory == 'Todos' || 
-            med.categoria.toLowerCase().contains(_selectedCategory.toLowerCase().substring(0, _selectedCategory.length - 2)); 
-        
-        // Lógica de búsqueda
-        final matchesSearch = med.nombre.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            med.grupo.toLowerCase().contains(_searchQuery.toLowerCase());
-            
-        return matchesCategory && matchesSearch;
-      }).toList();
-      
-      // Ordenar alfabéticamente
-      _filteredFarmacos.sort((a, b) => a.nombre.compareTo(b.nombre));
+      _applyFiltersInternal();
     });
+  }
+
+  void _applyFiltersInternal() {
+    _filteredFarmacos = _allFarmacos.where((med) {
+      String categorySearch = _selectedCategory.toLowerCase();
+      if (categorySearch.endsWith('s') && categorySearch != 'todos') {
+        categorySearch = categorySearch.substring(0, categorySearch.length - 1);
+      }
+
+      final matchesCategory = _selectedCategory == 'Todos' || 
+          med.categoria.toLowerCase().contains(categorySearch); 
+      
+      final matchesSearch = med.nombre.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          med.grupo.toLowerCase().contains(_searchQuery.toLowerCase());
+          
+      return matchesCategory && matchesSearch;
+    }).toList();
+    
+    _filteredFarmacos.sort((a, b) => a.nombre.compareTo(b.nombre));
   }
 
   @override
@@ -77,6 +83,11 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
       title: 'Farmacología',
       subtitle: 'Compendio de medicamentos',
       icon: Icons.vaccines_rounded,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _loadData,
+        backgroundColor: const Color(0xFF10B981),
+        child: const Icon(Icons.refresh, color: Colors.white),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
@@ -92,11 +103,15 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
             // Lista de Fármacos
             Expanded(
               child: _isLoading 
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                    ),
+                  )
                 : _filteredFarmacos.isEmpty
                   ? _buildEmptyState()
                   : ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.only(bottom: 80), // Espacio para el FAB
                       physics: const BouncingScrollPhysics(),
                       itemCount: _filteredFarmacos.length,
                       itemBuilder: (context, index) {

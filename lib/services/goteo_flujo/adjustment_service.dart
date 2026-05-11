@@ -11,6 +11,8 @@ class AdjustmentService {
     _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
   }
 
+  bool? _hasVibrator;
+
   /// Inicia la guía con el intervalo en milisegundos calculado
   void iniciarGuia(
     int intervaloMilisegundos, {
@@ -24,24 +26,30 @@ class AdjustmentService {
 
     _timer = Timer.periodic(
       Duration(milliseconds: intervaloMilisegundos),
-      (timer) async {
+      (timer) {
         if (modoSensorial) {
-          bool? hasVibrator = await Vibration.hasVibrator();
-          if (hasVibrator == true) {
-            Vibration.vibrate(duration: 50); // Vibración corta de 50ms
-          }
+          _vibrate();
         }
 
         if (modoAuditivo) {
-          // Limpieza de Memoria: liberamos el buffer antes de cada play()
-          // permitiendo que el sonido se reinicie inmediatamente en cada pulso
-          await _audioPlayer.stop();
-          
-          // Se reproduce el asset con la ruta correcta
-          await _audioPlayer.play(AssetSource('audio/gota.mp3'));
+          _playSound();
         }
       },
     );
+  }
+
+  Future<void> _vibrate() async {
+    _hasVibrator ??= await Vibration.hasVibrator();
+    if (_hasVibrator == true) {
+      Vibration.vibrate(duration: 50);
+    }
+  }
+
+  Future<void> _playSound() async {
+    // No esperamos (await) el stop/play para no bloquear el siguiente pulso del timer
+    _audioPlayer.stop().then((_) {
+      _audioPlayer.play(AssetSource('audio/gota.mp3'));
+    });
   }
 
   /// Cancela el Timer y detiene las reproducciones activas

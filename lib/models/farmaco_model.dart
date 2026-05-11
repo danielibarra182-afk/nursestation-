@@ -5,12 +5,17 @@ class Farmaco {
   final List<String> vias;
   final String dosisAdulto;
   final String dosisPediatrica;
-  final List<String> compatibilidad;
-  final String preparacion;
-  final String dilucion;
+  final List<String> compatibleCon;
+  final List<String> incompatibleCon;
+  final List<String> efectosGraves;
+  final List<String> efectosFrecuentes;
+  final String preparacionBolus;
+  final String dilucionBolus;
+  final String tiempoBolus;
+  final String preparacionInfusion;
+  final String dilucionInfusion;
   final String tiempoInfusion;
   final String riesgoEmbarazo;
-  final List<String> efectosAdversos;
   final List<String> contraindicaciones;
   final String generalidades;
 
@@ -21,12 +26,17 @@ class Farmaco {
     required this.vias,
     required this.dosisAdulto,
     required this.dosisPediatrica,
-    required this.compatibilidad,
-    required this.preparacion,
-    required this.dilucion,
+    required this.compatibleCon,
+    required this.incompatibleCon,
+    required this.efectosGraves,
+    required this.efectosFrecuentes,
+    required this.preparacionBolus,
+    required this.dilucionBolus,
+    required this.tiempoBolus,
+    required this.preparacionInfusion,
+    required this.dilucionInfusion,
     required this.tiempoInfusion,
     required this.riesgoEmbarazo,
-    required this.efectosAdversos,
     required this.contraindicaciones,
     required this.generalidades,
   });
@@ -39,12 +49,21 @@ class Farmaco {
       vias: _parseList(json['vias']),
       dosisAdulto: json['dosisAdulto'] ?? '',
       dosisPediatrica: json['dosisPediatrica'] ?? '',
-      compatibilidad: _parseList(json['compatibilidad']),
-      preparacion: json['preparacion'] ?? '',
-      dilucion: json['dilucion'] ?? '',
+      compatibleCon:
+          _parseList(json['compatibleCon'] ?? json['compatibilidad']),
+      incompatibleCon:
+          _parseList(json['incompatibleCon'] ?? json['incompatibilidad']),
+      efectosGraves: _parseList(json['efectosGraves']),
+      efectosFrecuentes:
+          _parseList(json['efectosFrecuentes'] ?? json['efectosAdversos']),
+      preparacionBolus: json['preparacionBolus'] ?? '',
+      dilucionBolus: json['dilucionBolus'] ?? '',
+      tiempoBolus: json['tiempoBolus'] ?? '',
+      preparacionInfusion:
+          json['preparacionInfusion'] ?? json['preparacion'] ?? '',
+      dilucionInfusion: json['dilucionInfusion'] ?? json['dilucion'] ?? '',
       tiempoInfusion: json['tiempoInfusion'] ?? '',
       riesgoEmbarazo: json['riesgoEmbarazo'] ?? '',
-      efectosAdversos: _parseList(json['efectosAdversos']),
       contraindicaciones: _parseList(json['contraindicaciones']),
       generalidades: json['generalidades'] ?? '',
     );
@@ -53,7 +72,16 @@ class Farmaco {
   static List<String> _parseList(dynamic value) {
     if (value == null) return [];
     if (value is List) return List<String>.from(value);
-    if (value is String) return [value];
+    if (value is String) {
+      if (value.contains(',')) {
+        return value
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+      }
+      return [value];
+    }
     return [];
   }
 
@@ -65,12 +93,17 @@ class Farmaco {
       'vias': vias,
       'dosisAdulto': dosisAdulto,
       'dosisPediatrica': dosisPediatrica,
-      'compatibilidad': compatibilidad,
-      'preparacion': preparacion,
-      'dilucion': dilucion,
+      'compatibleCon': compatibleCon,
+      'incompatibleCon': incompatibleCon,
+      'efectosGraves': efectosGraves,
+      'efectosFrecuentes': efectosFrecuentes,
+      'preparacionBolus': preparacionBolus,
+      'dilucionBolus': dilucionBolus,
+      'tiempoBolus': tiempoBolus,
+      'preparacionInfusion': preparacionInfusion,
+      'dilucionInfusion': dilucionInfusion,
       'tiempoInfusion': tiempoInfusion,
       'riesgoEmbarazo': riesgoEmbarazo,
-      'efectosAdversos': efectosAdversos,
       'contraindicaciones': contraindicaciones,
       'generalidades': generalidades,
     };

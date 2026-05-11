@@ -191,8 +191,7 @@ class _GoteoIVViewState extends State<GoteoIVView>
                               boxShadow: _isHoras
                                   ? [
                                       BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.05),
+                                          color: Colors.black.withOpacity(0.05),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2))
                                     ]
@@ -225,8 +224,7 @@ class _GoteoIVViewState extends State<GoteoIVView>
                               boxShadow: !_isHoras
                                   ? [
                                       BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.05),
+                                          color: Colors.black.withOpacity(0.05),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2))
                                     ]
@@ -476,10 +474,9 @@ class _GoteoIVViewState extends State<GoteoIVView>
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
           color:
-              isSelected ? _primaryBlue.withValues(alpha: 0.05) : Colors.white,
+              isSelected ? _primaryBlue.withOpacity(0.05) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? _primaryBlue : Colors.grey.shade300,
@@ -507,7 +504,7 @@ class _GoteoIVViewState extends State<GoteoIVView>
               style: TextStyle(
                 fontSize: 12,
                 color: isSelected
-                    ? _primaryBlue.withValues(alpha: 0.8)
+                    ? _primaryBlue.withOpacity(0.8)
                     : Colors.grey.shade500,
               ),
             ),

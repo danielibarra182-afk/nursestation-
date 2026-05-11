@@ -119,7 +119,7 @@ class FarmacoDetalleScreen extends StatelessWidget {
                   title: 'Tiempo de infusión',
                   icon: Icons.access_time_rounded,
                   color: primaryColor,
-                  content: InfusionBox(minutes: farmaco.tiempoInfusion),
+                  content: _buildTiempoInfusionContent(),
                 ),
                 FarmacoAccordion(
                   title: 'Riesgo en el embarazo',
@@ -169,12 +169,84 @@ class FarmacoDetalleScreen extends StatelessWidget {
   }
 
   Widget _buildCompatibilidadContent() {
-    if (farmaco.compatibilidad.isEmpty) {
+    if (farmaco.compatibleCon.isEmpty && farmaco.incompatibleCon.isEmpty) {
       return const Text('Información no disponible', style: TextStyle(color: Colors.grey));
     }
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: farmaco.compatibilidad.map((text) => StatusRow(icon: Icons.check, text: text, color: const Color(0xFF43A047))).toList(),
+      children: [
+        if (farmaco.compatibleCon.isNotEmpty) ...[
+          const Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Color(0xFF43A047), size: 20),
+              SizedBox(width: 10),
+              Text(
+                'COMPATIBLE CON',
+                style: TextStyle(
+                  color: Color(0xFF388E3C),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...farmaco.compatibleCon.map((text) => _buildStatusRow(
+                icon: Icons.check,
+                text: text,
+                color: const Color(0xFF43A047),
+              )),
+          const SizedBox(height: 24),
+        ],
+        if (farmaco.incompatibleCon.isNotEmpty) ...[
+          const Row(
+            children: [
+              Icon(Icons.block_flipped, color: Color(0xFFE64A19), size: 20),
+              SizedBox(width: 10),
+              Text(
+                'INCOMPATIBLE CON',
+                style: TextStyle(
+                  color: Color(0xFFE64A19),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...farmaco.incompatibleCon.map((text) => _buildStatusRow(
+                icon: Icons.close,
+                text: text,
+                color: const Color(0xFFE64A19),
+              )),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildStatusRow({required IconData icon, required String text, required Color color}) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 16, 
+                color: Color(0xFF111827),
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -182,31 +254,83 @@ class FarmacoDetalleScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (farmaco.preparacion.isNotEmpty) ...[
-          const Text('PREPARACIÓN:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blueGrey)),
-          const SizedBox(height: 4),
-          Text(farmaco.preparacion, style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937))),
-          const SizedBox(height: 12),
+        if (farmaco.preparacionBolus.isNotEmpty || farmaco.dilucionBolus.isNotEmpty) ...[
+          const Text('BOLO / ADMINISTRACIÓN DIRECTA:', 
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey, letterSpacing: 0.5)),
+          const SizedBox(height: 6),
+          if (farmaco.preparacionBolus.isNotEmpty) 
+            Text(farmaco.preparacionBolus, style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937))),
+          if (farmaco.dilucionBolus.isNotEmpty) 
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text('Dilución: ${farmaco.dilucionBolus}', style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563))),
+            ),
+          const SizedBox(height: 16),
         ],
-        if (farmaco.dilucion.isNotEmpty) ...[
-          const Text('DILUCIÓN:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blueGrey)),
-          const SizedBox(height: 4),
-          Text(farmaco.dilucion, style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937))),
+        if (farmaco.preparacionInfusion.isNotEmpty || farmaco.dilucionInfusion.isNotEmpty) ...[
+          const Text('INFUSIÓN INTERMITENTE / CONTINUA:', 
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey, letterSpacing: 0.5)),
+          const SizedBox(height: 6),
+          if (farmaco.preparacionInfusion.isNotEmpty) 
+            Text(farmaco.preparacionInfusion, style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937))),
+          if (farmaco.dilucionInfusion.isNotEmpty) 
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text('Dilución: ${farmaco.dilucionInfusion}', style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563))),
+            ),
         ],
-        if (farmaco.preparacion.isEmpty && farmaco.dilucion.isEmpty)
+        if (farmaco.preparacionBolus.isEmpty && farmaco.dilucionBolus.isEmpty && 
+            farmaco.preparacionInfusion.isEmpty && farmaco.dilucionInfusion.isEmpty)
           const Text('Información no disponible', style: TextStyle(color: Colors.grey)),
       ],
     );
   }
 
-  Widget _buildEfectosContent() {
-    if (farmaco.efectosAdversos.isEmpty) {
+  Widget _buildTiempoInfusionContent() {
+    if (farmaco.tiempoBolus.isEmpty && farmaco.tiempoInfusion.isEmpty) {
       return const Text('Información no disponible', style: TextStyle(color: Colors.grey));
     }
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: farmaco.efectosAdversos.map((e) => GenericChip(label: e, color: Colors.red[800]!)).toList(),
+
+    return Column(
+      children: [
+        if (farmaco.tiempoBolus.isNotEmpty) ...[
+          InfusionBox(title: 'Bolo / Directo', content: farmaco.tiempoBolus),
+          if (farmaco.tiempoInfusion.isNotEmpty) const SizedBox(height: 12),
+        ],
+        if (farmaco.tiempoInfusion.isNotEmpty)
+          InfusionBox(title: 'Infusión', content: farmaco.tiempoInfusion),
+      ],
+    );
+  }
+
+  Widget _buildEfectosContent() {
+    if (farmaco.efectosGraves.isEmpty && farmaco.efectosFrecuentes.isEmpty) {
+      return const Text('Información no disponible', style: TextStyle(color: Colors.grey));
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (farmaco.efectosGraves.isNotEmpty) ...[
+          const Text('GRAVES', style: TextStyle(color: Color(0xFFC2410C), fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: farmaco.efectosGraves.map((e) => GenericChip(label: e, color: const Color(0xFF991B1B))).toList(),
+          ),
+          const SizedBox(height: 16),
+        ],
+        if (farmaco.efectosFrecuentes.isNotEmpty) ...[
+          const Text('FRECUENTES', style: TextStyle(color: Color(0xFF4B5563), fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: farmaco.efectosFrecuentes.map((e) => GenericChip(label: e, color: const Color(0xFF4B5563))).toList(),
+          ),
+        ],
+      ],
     );
   }
 
@@ -216,7 +340,7 @@ class FarmacoDetalleScreen extends StatelessWidget {
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: farmaco.contraindicaciones.map((e) => StatusRow(icon: Icons.stop_circle_outlined, text: e, color: Colors.red)).toList(),
+      children: farmaco.contraindicaciones.map((e) => StatusRow(icon: Icons.block_flipped, text: e, color: const Color(0xFF991B1B))).toList(),
     );
   }
 }

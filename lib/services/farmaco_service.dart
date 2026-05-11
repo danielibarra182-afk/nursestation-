@@ -5,19 +5,23 @@ import '../models/farmaco_model.dart';
 class FarmacoService {
   Future<List<Farmaco>> cargarMedicamentos() async {
     try {
-      print('Cargando medicamentos desde assets...');
-      final String response = await rootBundle.loadString('assets/data/medicamentos.json');
-      print('Archivo JSON cargado correctamente. Longitud: ${response.length}');
+      print('--- CARGANDO MEDICAMENTOS ---');
+      // Desactivamos el caché para que Flutter intente leer la versión más reciente del archivo
+      final String response = await rootBundle.loadString('assets/data/medicamentos.json', cache: false);
       
+      print('JSON cargado. Longitud: ${response.length} caracteres.');
+      // Imprimimos un fragmento para verificar en consola si los cambios están ahí
+      if (response.length > 100) {
+        print('Primeros 100 caracteres: ${response.substring(0, 100)}');
+      }
+
       final List<dynamic> data = json.decode(response);
-      print('JSON decodificado. Número de elementos: ${data.length}');
-      
       final List<Farmaco> lista = data.map((item) => Farmaco.fromJson(item)).toList();
-      print('Mapeo a Farmaco completado. Total: ${lista.length}');
       
+      print('Carga completada: ${lista.length} medicamentos procesados.');
       return lista;
     } catch (e, stackTrace) {
-      print('ERROR FATAL cargando medicamentos: $e');
+      print('ERROR al cargar medicamentos: $e');
       print('Stacktrace: $stackTrace');
       return [];
     }

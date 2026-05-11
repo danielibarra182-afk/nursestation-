@@ -255,39 +255,71 @@ class DoseBox extends StatelessWidget {
 }
 
 class InfusionBox extends StatelessWidget {
-  final String minutes;
+  final String title;
+  final String content;
 
-  const InfusionBox({super.key, required this.minutes});
+  const InfusionBox({super.key, required this.title, required this.content});
 
   @override
   Widget build(BuildContext context) {
+    if (content.isEmpty) return const SizedBox.shrink();
+    
+    // Si el contenido ya incluye la palabra "minutos", no añadimos el sufijo
+    final bool showSuffix = !content.toLowerCase().contains('minuto');
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFEBF5FF),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.access_time_rounded, color: Color(0xFF1E40AF), size: 32),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                minutes.isEmpty ? '--' : minutes,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E40AF),
+          const Icon(Icons.access_time_rounded, color: Color(0xFF1E40AF), size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (title.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      title.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E40AF),
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ),
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E40AF),
+                      height: 1.2,
+                    ),
+                    children: [
+                      TextSpan(text: content),
+                      if (showSuffix)
+                        const TextSpan(
+                          text: ' minutos',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              const Text(
-                'minutos',
-                style: TextStyle(fontSize: 14, color: Color(0xFF1E40AF)),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
