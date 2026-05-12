@@ -35,6 +35,7 @@ class _FarmacoMenuScreenState extends State<FarmacoMenuScreen> {
     'Endocrinología',
     'Neumología',
     'Neurología',
+    'Antivirales',
   ];
 
   @override
@@ -67,13 +68,19 @@ class _FarmacoMenuScreenState extends State<FarmacoMenuScreen> {
   void _applyFiltersInternal() {
     // Normalización de categoría para búsqueda flexible (singular/plural)
     String categorySearch = _selectedCategory.toLowerCase();
-    if (categorySearch.endsWith('s') && categorySearch != 'todos') {
-      categorySearch = categorySearch.substring(0, categorySearch.length - 1);
+    if (categorySearch != 'todos') {
+      if (categorySearch.endsWith('es')) {
+        categorySearch = categorySearch.substring(0, categorySearch.length - 2);
+      } else if (categorySearch.endsWith('s')) {
+        categorySearch = categorySearch.substring(0, categorySearch.length - 1);
+      }
     }
 
     _filteredMedications = _allMedications.where((med) {
       final matchesCategory = _selectedCategory == 'Todos' ||
-          med.categoria.toLowerCase().contains(categorySearch);
+          med.categoria.toLowerCase().contains(categorySearch) ||
+          (_selectedCategory == 'Antivirales' &&
+              med.categoria.toLowerCase().contains('antirretroviral'));
 
       final matchesSearch =
           med.nombre.toLowerCase().contains(_searchQuery.toLowerCase()) ||

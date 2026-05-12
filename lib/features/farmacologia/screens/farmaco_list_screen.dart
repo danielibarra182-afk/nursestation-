@@ -34,6 +34,7 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
     'Endocrinología',
     'Neumología',
     'Neurología',
+    'Antivirales',
   ];
 
   @override
@@ -61,12 +62,17 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
   void _applyFiltersInternal() {
     _filteredFarmacos = _allFarmacos.where((med) {
       String categorySearch = _selectedCategory.toLowerCase();
-      if (categorySearch.endsWith('s') && categorySearch != 'todos') {
-        categorySearch = categorySearch.substring(0, categorySearch.length - 1);
+      if (categorySearch != 'todos') {
+        if (categorySearch.endsWith('es')) {
+          categorySearch = categorySearch.substring(0, categorySearch.length - 2);
+        } else if (categorySearch.endsWith('s')) {
+          categorySearch = categorySearch.substring(0, categorySearch.length - 1);
+        }
       }
 
       final matchesCategory = _selectedCategory == 'Todos' || 
-          med.categoria.toLowerCase().contains(categorySearch); 
+          med.categoria.toLowerCase().contains(categorySearch) ||
+          (_selectedCategory == 'Antivirales' && med.categoria.toLowerCase().contains('antirretroviral')); 
       
       final matchesSearch = med.nombre.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           med.grupo.toLowerCase().contains(_searchQuery.toLowerCase());
