@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../models/farmaco_model.dart';
+import '../utils/farmaco_ui_utils.dart';
 
-// ─── COMPONENTES PARA LISTA DE FÁRMACOS ────────────────────────
+// Función auxiliar para obtener el color de la categoría
+Color getFarmacoColor(String category) {
+  return FarmacoUIUtils.getCategoryColor(category);
+}
 
 class FarmacoTile extends StatelessWidget {
   final Farmaco med;
@@ -15,7 +19,7 @@ class FarmacoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = _getCategoryColor(med.categoria);
+    final primaryColor = getFarmacoColor(med.categoria);
     final bgColor = primaryColor.withOpacity(0.1);
 
     return Container(
@@ -32,84 +36,83 @@ class FarmacoTile extends StatelessWidget {
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              children: [
-                Hero(
-                  tag: 'icon_${med.nombre}',
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: bgColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.medication_outlined,
-                      color: primaryColor,
-                      size: 24,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        med.nombre,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF111827),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          // Acento lateral
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 5,
+            child: Container(color: primaryColor),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                child: Row(
+                  children: [
+                    Hero(
+                      tag: 'icon_${med.nombre}',
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.medication_outlined,
+                          color: primaryColor,
+                          size: 24,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        med.grupo,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ...med.vias.map((ruta) => RouteChip(text: ruta)),
-                          CategoryChip(text: med.categoria),
+                          Text(
+                            med.nombre,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: primaryColor, // Coherencia: nombre en color de categoría
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            med.grupo,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 6,
+                            children: [
+                              ...med.vias.map((ruta) => RouteChip(text: ruta)),
+                              CategoryChip(text: med.categoria),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const Icon(Icons.chevron_right, color: Colors.grey),
+                  ],
                 ),
-                const Icon(Icons.chevron_right, color: Colors.grey),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
-  }
-
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Analgésicos': return const Color(0xFFE65100);
-      case 'Antibióticos': return const Color(0xFF00695C);
-      case 'Cardiovascular': return const Color(0xFF1565C0);
-      case 'Digestivos': return const Color(0xFF7B1FA2);
-      case 'Anticoagulantes': return const Color(0xFFC62828);
-      case 'Esteroides': return const Color(0xFF283593);
-      case 'Soluciones': return const Color(0xFF00838F);
-      case 'Electrolitos': return const Color(0xFFF9A825);
-      default: return const Color(0xFF10B981);
-    }
   }
 }
 

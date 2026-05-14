@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/farmaco_model.dart';
 import '../widgets/farmaco_widgets.dart';
+import '../utils/farmaco_ui_utils.dart';
 
 class FarmacoDetalleScreen extends StatelessWidget {
   final Farmaco farmaco;
@@ -9,7 +10,9 @@ class FarmacoDetalleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color primaryColor = const Color(0xFF10B981); // Color verde médico de la app
+    final Color primaryColor =
+        FarmacoUIUtils.getCategoryColor(farmaco.categoria);
+    final Color contrastColor = FarmacoUIUtils.getContrastColor(primaryColor);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F3F4),
@@ -28,7 +31,7 @@ class FarmacoDetalleScreen extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color(0xFF075E54).withOpacity(0.9),
+                  primaryColor.withOpacity(0.8),
                   primaryColor,
                 ],
               ),
@@ -38,13 +41,13 @@ class FarmacoDetalleScreen extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                      Icon(Icons.arrow_back, color: contrastColor, size: 20),
                       SizedBox(width: 8),
                       Text(
                         'Volver',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+                        style: TextStyle(color: contrastColor, fontSize: 18),
                       ),
                     ],
                   ),
@@ -52,8 +55,8 @@ class FarmacoDetalleScreen extends StatelessWidget {
                 const SizedBox(height: 25),
                 Text(
                   farmaco.nombre,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: contrastColor,
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                   ),
@@ -62,7 +65,7 @@ class FarmacoDetalleScreen extends StatelessWidget {
                 Text(
                   farmaco.grupo,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: contrastColor.withOpacity(0.9),
                     fontSize: 18,
                   ),
                 ),
@@ -71,15 +74,16 @@ class FarmacoDetalleScreen extends StatelessWidget {
                   spacing: 10,
                   children: farmaco.vias.map((ruta) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         ruta,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: contrastColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -125,7 +129,8 @@ class FarmacoDetalleScreen extends StatelessWidget {
                   title: 'Riesgo en el embarazo',
                   icon: Icons.child_friendly_rounded,
                   color: primaryColor,
-                  content: PregnancyCategoryChip(category: farmaco.riesgoEmbarazo),
+                  content:
+                      PregnancyCategoryChip(category: farmaco.riesgoEmbarazo),
                 ),
                 FarmacoAccordion(
                   title: 'Efectos adversos',
@@ -135,7 +140,7 @@ class FarmacoDetalleScreen extends StatelessWidget {
                 ),
                 FarmacoAccordion(
                   title: 'Contraindicaciones',
-                  icon: Icons.block_flipped,
+                  icon: Icons.block,
                   color: primaryColor,
                   content: _buildContraindicacionesContent(),
                 ),
@@ -144,8 +149,11 @@ class FarmacoDetalleScreen extends StatelessWidget {
                   icon: Icons.info_outline_rounded,
                   color: primaryColor,
                   content: Text(
-                    farmaco.generalidades.isEmpty ? 'Información no disponible' : farmaco.generalidades,
-                    style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937), height: 1.4),
+                    farmaco.generalidades.isEmpty
+                        ? 'Información no disponible'
+                        : farmaco.generalidades,
+                    style: const TextStyle(
+                        fontSize: 15, color: Color(0xFF1F2937), height: 1.4),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -163,23 +171,26 @@ class FarmacoDetalleScreen extends StatelessWidget {
       children: [
         Expanded(child: DoseBox(title: 'Adulto', text: farmaco.dosisAdulto)),
         const SizedBox(width: 10),
-        Expanded(child: DoseBox(title: 'Pediátrica', text: farmaco.dosisPediatrica)),
+        Expanded(
+            child: DoseBox(title: 'Pediátrica', text: farmaco.dosisPediatrica)),
       ],
     );
   }
 
   Widget _buildCompatibilidadContent() {
     if (farmaco.compatibleCon.isEmpty && farmaco.incompatibleCon.isEmpty) {
-      return const Text('Información no disponible', style: TextStyle(color: Colors.grey));
+      return const Text('Información no disponible',
+          style: TextStyle(color: Colors.grey));
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (farmaco.compatibleCon.isNotEmpty) ...[
           const Row(
             children: [
-              Icon(Icons.check_circle_outline, color: Color(0xFF43A047), size: 20),
+              Icon(Icons.check_circle_outline,
+                  color: Color(0xFF43A047), size: 20),
               SizedBox(width: 10),
               Text(
                 'COMPATIBLE CON',
@@ -227,7 +238,8 @@ class FarmacoDetalleScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusRow({required IconData icon, required String text, required Color color}) {
+  Widget _buildStatusRow(
+      {required IconData icon, required String text, required Color color}) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Row(
@@ -239,7 +251,7 @@ class FarmacoDetalleScreen extends StatelessWidget {
             child: Text(
               text,
               style: const TextStyle(
-                fontSize: 16, 
+                fontSize: 16,
                 color: Color(0xFF111827),
                 height: 1.4,
               ),
@@ -254,41 +266,61 @@ class FarmacoDetalleScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (farmaco.preparacionBolus.isNotEmpty || farmaco.dilucionBolus.isNotEmpty) ...[
-          const Text('BOLO / ADMINISTRACIÓN DIRECTA:', 
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey, letterSpacing: 0.5)),
+        if (farmaco.preparacionBolus.isNotEmpty ||
+            farmaco.dilucionBolus.isNotEmpty) ...[
+          const Text('BOLO / ADMINISTRACIÓN DIRECTA:',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Colors.blueGrey,
+                  letterSpacing: 0.5)),
           const SizedBox(height: 6),
-          if (farmaco.preparacionBolus.isNotEmpty) 
-            Text(farmaco.preparacionBolus, style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937))),
-          if (farmaco.dilucionBolus.isNotEmpty) 
+          if (farmaco.preparacionBolus.isNotEmpty)
+            Text(farmaco.preparacionBolus,
+                style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937))),
+          if (farmaco.dilucionBolus.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4.0),
-              child: Text('Dilución: ${farmaco.dilucionBolus}', style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563))),
+              child: Text('Dilución: ${farmaco.dilucionBolus}',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFF4B5563))),
             ),
           const SizedBox(height: 16),
         ],
-        if (farmaco.preparacionInfusion.isNotEmpty || farmaco.dilucionInfusion.isNotEmpty) ...[
-          const Text('INFUSIÓN INTERMITENTE / CONTINUA:', 
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey, letterSpacing: 0.5)),
+        if (farmaco.preparacionInfusion.isNotEmpty ||
+            farmaco.dilucionInfusion.isNotEmpty) ...[
+          const Text('INFUSIÓN INTERMITENTE / CONTINUA:',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Colors.blueGrey,
+                  letterSpacing: 0.5)),
           const SizedBox(height: 6),
-          if (farmaco.preparacionInfusion.isNotEmpty) 
-            Text(farmaco.preparacionInfusion, style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937))),
-          if (farmaco.dilucionInfusion.isNotEmpty) 
+          if (farmaco.preparacionInfusion.isNotEmpty)
+            Text(farmaco.preparacionInfusion,
+                style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937))),
+          if (farmaco.dilucionInfusion.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4.0),
-              child: Text('Dilución: ${farmaco.dilucionInfusion}', style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563))),
+              child: Text('Dilución: ${farmaco.dilucionInfusion}',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFF4B5563))),
             ),
         ],
-        if (farmaco.preparacionBolus.isEmpty && farmaco.dilucionBolus.isEmpty && 
-            farmaco.preparacionInfusion.isEmpty && farmaco.dilucionInfusion.isEmpty)
-          const Text('Información no disponible', style: TextStyle(color: Colors.grey)),
+        if (farmaco.preparacionBolus.isEmpty &&
+            farmaco.dilucionBolus.isEmpty &&
+            farmaco.preparacionInfusion.isEmpty &&
+            farmaco.dilucionInfusion.isEmpty)
+          const Text('Información no disponible',
+              style: TextStyle(color: Colors.grey)),
       ],
     );
   }
 
   Widget _buildTiempoInfusionContent() {
     if (farmaco.tiempoBolus.isEmpty && farmaco.tiempoInfusion.isEmpty) {
-      return const Text('Información no disponible', style: TextStyle(color: Colors.grey));
+      return const Text('Información no disponible',
+          style: TextStyle(color: Colors.grey));
     }
 
     return Column(
@@ -305,29 +337,46 @@ class FarmacoDetalleScreen extends StatelessWidget {
 
   Widget _buildEfectosContent() {
     if (farmaco.efectosGraves.isEmpty && farmaco.efectosFrecuentes.isEmpty) {
-      return const Text('Información no disponible', style: TextStyle(color: Colors.grey));
+      return const Text('Información no disponible',
+          style: TextStyle(color: Colors.grey));
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (farmaco.efectosGraves.isNotEmpty) ...[
-          const Text('GRAVES', style: TextStyle(color: Color(0xFFC2410C), fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5)),
+          const Text('GRAVES',
+              style: TextStyle(
+                  color: Color(0xFFC2410C),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  letterSpacing: 0.5)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: farmaco.efectosGraves.map((e) => GenericChip(label: e, color: const Color(0xFF991B1B))).toList(),
+            children: farmaco.efectosGraves
+                .map((e) =>
+                    GenericChip(label: e, color: const Color(0xFF991B1B)))
+                .toList(),
           ),
           const SizedBox(height: 16),
         ],
         if (farmaco.efectosFrecuentes.isNotEmpty) ...[
-          const Text('FRECUENTES', style: TextStyle(color: Color(0xFF4B5563), fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5)),
+          const Text('FRECUENTES',
+              style: TextStyle(
+                  color: Color(0xFF4B5563),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  letterSpacing: 0.5)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: farmaco.efectosFrecuentes.map((e) => GenericChip(label: e, color: const Color(0xFF4B5563))).toList(),
+            children: farmaco.efectosFrecuentes
+                .map((e) =>
+                    GenericChip(label: e, color: const Color(0xFF4B5563)))
+                .toList(),
           ),
         ],
       ],
@@ -336,11 +385,15 @@ class FarmacoDetalleScreen extends StatelessWidget {
 
   Widget _buildContraindicacionesContent() {
     if (farmaco.contraindicaciones.isEmpty) {
-      return const Text('Información no disponible', style: TextStyle(color: Colors.grey));
+      return const Text('Información no disponible',
+          style: TextStyle(color: Colors.grey));
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: farmaco.contraindicaciones.map((e) => StatusRow(icon: Icons.block_flipped, text: e, color: const Color(0xFF991B1B))).toList(),
+      children: farmaco.contraindicaciones
+          .map((e) => _buildStatusRow(
+              icon: Icons.block, text: e, color: const Color(0xFF991B1B)))
+          .toList(),
     );
   }
 }

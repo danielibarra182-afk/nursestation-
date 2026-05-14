@@ -11,6 +11,7 @@ class MasterLayout extends StatelessWidget {
   final Widget? expandedWidget;
   final double expandedHeight;
   final Widget? leading;
+  final ScrollController? scrollController;
 
   const MasterLayout({
     super.key,
@@ -24,6 +25,7 @@ class MasterLayout extends StatelessWidget {
     this.expandedWidget,
     this.expandedHeight = 200.0,
     this.leading,
+    this.scrollController,
   });
 
   @override
@@ -32,6 +34,7 @@ class MasterLayout extends StatelessWidget {
       backgroundColor: const Color(0xFFF9FAFB),
       floatingActionButton: floatingActionButton,
       body: NestedScrollView(
+        controller: scrollController,
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return <Widget>[
             SliverAppBar(

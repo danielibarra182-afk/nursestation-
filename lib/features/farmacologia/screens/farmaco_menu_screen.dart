@@ -3,6 +3,7 @@ import '../../../widgets/master_layout.dart';
 import '../../../models/farmaco_model.dart';
 import '../../../services/farmaco_service.dart';
 import '../widgets/farmaco_widgets.dart';
+import '../utils/farmaco_ui_utils.dart';
 import 'farmaco_detalle_screen.dart';
 
 class FarmacoMenuScreen extends StatefulWidget {
@@ -25,6 +26,7 @@ class _FarmacoMenuScreenState extends State<FarmacoMenuScreen> {
   final List<String> _categories = [
     'Todos',
     'Analgésicos',
+    'Sedantes y anestésicos',
     'Antibióticos',
     'Cardiovascular',
     'Digestivos',
@@ -184,6 +186,12 @@ class _FarmacoMenuScreenState extends State<FarmacoMenuScreen> {
               itemBuilder: (context, index) {
                 final category = _categories[index];
                 final isSelected = _selectedCategory == category;
+                final categoryColor = category == 'Todos' 
+                    ? const Color(0xFF10B981) 
+                    : getFarmacoColor(category);
+                final contrastColor = isSelected 
+                    ? FarmacoUIUtils.getContrastColor(categoryColor) 
+                    : Colors.black87;
 
                 return GestureDetector(
                   onTap: () {
@@ -197,25 +205,29 @@ class _FarmacoMenuScreenState extends State<FarmacoMenuScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 10),
                     decoration: BoxDecoration(
-                      color:
-                          isSelected ? const Color(0xFFE0F2F1) : Colors.white,
+                      color: isSelected ? categoryColor : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isSelected
-                            ? const Color(0xFF10B981)
+                            ? categoryColor
                             : Colors.grey[300]!,
                         width: 1,
                       ),
+                      boxShadow: isSelected ? [
+                        BoxShadow(
+                          color: categoryColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        )
+                      ] : null,
                     ),
                     child: Center(
                       child: Text(
                         category,
                         style: TextStyle(
-                          color: isSelected
-                              ? const Color(0xFF00695C)
-                              : Colors.black87,
+                          color: contrastColor,
                           fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                              isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                     ),

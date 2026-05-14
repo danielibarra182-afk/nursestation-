@@ -3,6 +3,7 @@ import '../../../widgets/master_layout.dart';
 import '../../../models/farmaco_model.dart';
 import '../../../services/farmaco_service.dart';
 import '../widgets/farmaco_widgets.dart';
+import '../utils/farmaco_ui_utils.dart';
 import 'farmaco_detalle_screen.dart';
 
 class FarmacoListScreen extends StatefulWidget {
@@ -14,6 +15,8 @@ class FarmacoListScreen extends StatefulWidget {
 
 class _FarmacoListScreenState extends State<FarmacoListScreen> {
   final FarmacoService _farmacoService = FarmacoService();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _searchFocusNode = FocusNode();
   
   List<Farmaco> _allFarmacos = [];
   List<Farmaco> _filteredFarmacos = [];
@@ -24,6 +27,7 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
   final List<String> _categories = [
     'Todos',
     'Analgésicos',
+    'Sedantes y anestésicos',
     'Antibióticos',
     'Cardiovascular',
     'Digestivos',
@@ -41,6 +45,31 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
   void initState() {
     super.initState();
     _loadData();
+    _searchFocusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _searchFocusNode.removeListener(_onFocusChange);
+    _searchFocusNode.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (_searchFocusNode.hasFocus) {
+      // Retraer el encabezado cuando el buscador tiene el foco
+      // El scroll de 200 es la altura expandida por defecto en MasterLayout
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            200.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -89,6 +118,7 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
       title: 'Farmacología',
       subtitle: 'Compendio de medicamentos',
       icon: Icons.vaccines_rounded,
+      scrollController: _scrollController,
       floatingActionButton: FloatingActionButton(
         onPressed: _loadData,
         backgroundColor: const Color(0xFF10B981),
@@ -156,6 +186,7 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
         ],
       ),
       child: TextField(
+        focusNode: _searchFocusNode,
         onChanged: (value) {
           _searchQuery = value;
           _applyFilters();
@@ -179,6 +210,14 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
         itemBuilder: (context, index) {
           final category = _categories[index];
           final isSelected = _selectedCategory == category;
+          
+          final categoryColor = category == 'Todos' 
+              ? const Color(0xFF10B981) 
+              : getFarmacoColor(category);
+          final contrastColor = isSelected 
+              ? FarmacoUIUtils.getContrastColor(categoryColor) 
+              : Colors.black87;
+
           return Padding(
             padding: const EdgeInsets.only(right: 10),
             child: FilterChip(
@@ -190,17 +229,17 @@ class _FarmacoListScreenState extends State<FarmacoListScreen> {
                   _applyFilters();
                 });
               },
-              selectedColor: const Color(0xFF10B981).withOpacity(0.2),
-              checkmarkColor: const Color(0xFF10B981),
+              selectedColor: categoryColor,
+              checkmarkColor: contrastColor,
               labelStyle: TextStyle(
-                color: isSelected ? const Color(0xFF075E54) : Colors.black87,
+                color: isSelected ? contrastColor : Colors.black87,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
-                  color: isSelected ? const Color(0xFF10B981) : Colors.grey[300]!,
+                  color: isSelected ? categoryColor : Colors.grey[300]!,
                 ),
               ),
             ),
