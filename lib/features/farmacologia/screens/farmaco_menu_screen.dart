@@ -186,11 +186,11 @@ class _FarmacoMenuScreenState extends State<FarmacoMenuScreen> {
               itemBuilder: (context, index) {
                 final category = _categories[index];
                 final isSelected = _selectedCategory == category;
-                final categoryColor = category == 'Todos' 
-                    ? const Color(0xFF10B981) 
+                final categoryColor = category == 'Todos'
+                    ? const Color(0xFF10B981)
                     : getFarmacoColor(category);
-                final contrastColor = isSelected 
-                    ? FarmacoUIUtils.getContrastColor(categoryColor) 
+                final contrastColor = isSelected
+                    ? FarmacoUIUtils.getContrastColor(categoryColor)
                     : Colors.black87;
 
                 return GestureDetector(
@@ -208,18 +208,18 @@ class _FarmacoMenuScreenState extends State<FarmacoMenuScreen> {
                       color: isSelected ? categoryColor : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: isSelected
-                            ? categoryColor
-                            : Colors.grey[300]!,
+                        color: isSelected ? categoryColor : Colors.grey[300]!,
                         width: 1,
                       ),
-                      boxShadow: isSelected ? [
-                        BoxShadow(
-                          color: categoryColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        )
-                      ] : null,
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: categoryColor.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              )
+                            ]
+                          : null,
                     ),
                     child: Center(
                       child: Text(

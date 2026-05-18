@@ -266,9 +266,6 @@ class InfusionBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (content.isEmpty) return const SizedBox.shrink();
-    
-    // Si el contenido ya incluye la palabra "minutos", no añadimos el sufijo
-    final bool showSuffix = !content.toLowerCase().contains('minuto');
 
     return Container(
       width: double.infinity,
@@ -310,14 +307,6 @@ class InfusionBox extends StatelessWidget {
                     ),
                     children: [
                       TextSpan(text: content),
-                      if (showSuffix)
-                        const TextSpan(
-                          text: ' minutos',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.normal,
-                          ),
-                        ),
                     ],
                   ),
                 ),
